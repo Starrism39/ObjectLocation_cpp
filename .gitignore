@@ -1,11 +1,14 @@
 # Third party libraries
 3rdparty/glm/*
+!3rdparty/glm/.gitkeep
 
 # Build directories
 build/*
+!build/.gitkeep
 
 # Data directories
 data/*
+!data/.gitkeep
 
 # IDE specific files
 .vscode/

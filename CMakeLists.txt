@@ -85,9 +85,15 @@ include_directories(
 
 aux_source_directory(${PROJECT_SOURCE_DIR}/src/modules DET_SRC_DIR)
 aux_source_directory(${PROJECT_SOURCE_DIR}/src/utils DET_SRC_DIR)
+aux_source_directory(${PROJECT_SOURCE_DIR}/src/framework DET_SRC_DIR)
 
 add_executable(EstiTest EstiTest.cpp ${DET_SRC_DIR})
+add_executable(SpatialTest SpatialTest.cpp ${DET_SRC_DIR})
 target_link_libraries(EstiTest
+        ${GeographicLib_LIBRARIES} 
+        nlohmann_json::nlohmann_json 
+        pthread)
+target_link_libraries(SpatialTest
         ${GeographicLib_LIBRARIES} 
         nlohmann_json::nlohmann_json 
         pthread)
