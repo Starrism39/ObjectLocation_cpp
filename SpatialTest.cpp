@@ -74,6 +74,7 @@ std::vector<Package> generateSimulatedData(RandomGenerator& rng, int num_targets
                 static_cast<float>(base_lon + rng.generateFloat(-0.001, 0.001)),
                 static_cast<float>(base_alt + 100.0)  // 无人机高度比目标高100米
             };
+
             
             packages.push_back(pkg);
         }
