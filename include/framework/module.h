@@ -17,16 +17,16 @@ public:
     time_t time;
     std::string uav_id = "";
     int camera_id = -1;
-    std::vector<float> camera_pose;  // [yaw,pitch,roll,x,y,z]
-    std::vector<float> camera_K;     // [fx,fy,cx,cy]
-    std::vector<float> camera_distortion;  // [k1,k2,p1,p2]
+    std::vector<double> camera_pose;  // [yaw,pitch,roll,x,y,z]
+    std::vector<double> camera_K;     // [fx,fy,cx,cy]
+    std::vector<double> camera_distortion;  // [k1,k2,p1,p2,k3]
     std::vector<int> Bbox;           // [x,y,w,h]
-    std::vector<float> norm_Bbox;    // [x,y,w,h] 归一化后的bbox
+    std::vector<double> norm_Bbox;    // [x,y,w,h] 归一化后的bbox
     int class_id = -1;                    // 0:人 1:车
     std::string class_name = "";
     int tracker_id = -1;
-    std::vector<float> uav_wgs;      // WGS84 [lat,lon,alt]
-    std::vector<float> uav_utm;      // UTM坐标
+    std::vector<double> uav_wgs;      // WGS84 [lat,lon,alt]
+    std::vector<double> uav_utm;      // UTM坐标
     std::string obj_img = "";
     
     // 用于评估
@@ -38,10 +38,10 @@ public:
     // 读写成员
     int global_id = -1;
     int local_id = -1;
-    std::vector<float> location;     // WGS84
+    std::vector<double> location;     // UTM
     
     // 方法
-    std::vector<float> getCenterPoint() const;
+    std::vector<double> getCenterPoint() const;
     Package copy() const;
     void setBboxType(const std::string& type);
     std::string toString() const;

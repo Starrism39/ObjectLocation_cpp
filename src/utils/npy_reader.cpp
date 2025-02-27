@@ -123,7 +123,7 @@ bool NPYReader::ParseHeader(const std::string& header, bool& fortran_order,
 }
 
 
-bool NPYReader::ReadTriangleMesh(const std::string& filename, std::vector<std::vector<std::vector<float>>>& data,
+bool NPYReader::ReadMesh(const std::string& filename, std::vector<std::vector<std::vector<float>>>& data,
                                 size_t& num_triangles, size_t& vertices_per_triangle,
                                 size_t& coords_per_vertex) {
     std::ifstream file(filename, std::ios::binary);

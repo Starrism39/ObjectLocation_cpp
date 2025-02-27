@@ -226,9 +226,9 @@ std::map<int, std::vector<Package>> SpatialFilter::spatialFilter2(const std::vec
         // 更新位置
         for (auto& detect : group) {
             detect.location = {
-                static_cast<float>(avg_location[0]), 
-                static_cast<float>(avg_location[1]), 
-                static_cast<float>(avg_location[2])
+                (avg_location[0]), 
+                (avg_location[1]), 
+                (avg_location[2])
             };
         }
         

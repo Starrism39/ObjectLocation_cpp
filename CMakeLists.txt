@@ -87,13 +87,10 @@ aux_source_directory(${PROJECT_SOURCE_DIR}/src/modules DET_SRC_DIR)
 aux_source_directory(${PROJECT_SOURCE_DIR}/src/utils DET_SRC_DIR)
 aux_source_directory(${PROJECT_SOURCE_DIR}/src/framework DET_SRC_DIR)
 
-add_executable(EstiTest EstiTest.cpp ${DET_SRC_DIR})
-add_executable(SpatialTest SpatialTest.cpp ${DET_SRC_DIR})
-add_executable(TimeTest TimeTest.cpp ${DET_SRC_DIR})
-target_link_libraries(EstiTest
-        ${GeographicLib_LIBRARIES} 
-        nlohmann_json::nlohmann_json 
-        pthread)
+add_executable(RaycastTest test/RaycastTest.cpp ${DET_SRC_DIR})
+add_executable(SpatialTest test/SpatialTest.cpp ${DET_SRC_DIR})
+add_executable(TimeTest test/TimeTest.cpp ${DET_SRC_DIR})
+add_executable(EstiPositionTest test/EstiPositionTest.cpp ${DET_SRC_DIR})
 
 
 # if(BUILD_TESTS)

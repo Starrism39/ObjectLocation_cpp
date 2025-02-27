@@ -11,7 +11,7 @@
 
 class NPYReader {
 public:
-    static bool ReadTriangleMesh(const std::string& filename, std::vector<std::vector<std::vector<float>>>& data,
+    static bool ReadMesh(const std::string& filename, std::vector<std::vector<std::vector<float>>>& data,
                                 size_t& num_triangles, size_t& vertices_per_triangle,
                                 size_t& coords_per_vertex);
 private:

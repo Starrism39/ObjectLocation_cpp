@@ -2,7 +2,7 @@
 #include <stdexcept>
 #include <iostream>
 #include "utils/npy_reader.h"
-#include "modules/estiPosition.h"
+#include "utils/mesh_raycast.h"
 
 
 int main() {
@@ -11,7 +11,7 @@ int main() {
     const std::string filename = "/home/xjy/code/location_Map/test_1/data/mesh_triangles.npy";
     std::vector<std::vector<std::vector<float>>> mesh_data;
     size_t num_triangles, vertices_per_triangle, coords_per_vertex;
-    if (!NPYReader::ReadTriangleMesh(filename, mesh_data, 
+    if (!NPYReader::ReadMesh(filename, mesh_data, 
                                     num_triangles, vertices_per_triangle, coords_per_vertex)) {
         std::cerr << "Failed to read mesh data" << std::endl;
         return -1;

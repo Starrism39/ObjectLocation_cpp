@@ -17,23 +17,23 @@ Package::Package(time_t time) :
     bbox_type("xywh") {}
 
 
-std::vector<float> Package::getCenterPoint() const {
+std::vector<double> Package::getCenterPoint() const {
     if (Bbox.size() < 4) {
         throw std::runtime_error("Bbox未正确初始化");
     }
 
-    std::vector<float> center(2);
+    std::vector<double> center(2);
     if (bbox_type == "cxcywh") {
-        center[0] = static_cast<float>(Bbox[0]);
-        center[1] = static_cast<float>(Bbox[1] + Bbox[3]/2.0);
+        center[0] = static_cast<double>(Bbox[0]);
+        center[1] = static_cast<double>(Bbox[1] + Bbox[3]/2.0);
     }
     else if (bbox_type == "xyxy") {
-        center[0] = static_cast<float>((Bbox[0] + Bbox[2])/2.0);
-        center[1] = static_cast<float>((Bbox[1] + Bbox[3])/2.0);
+        center[0] = static_cast<double>((Bbox[0] + Bbox[2])/2.0);
+        center[1] = static_cast<double>((Bbox[1] + Bbox[3])/2.0);
     }
     else if (bbox_type == "xywh") {
-        center[0] = static_cast<float>(Bbox[0] + Bbox[2]/2.0);
-        center[1] = static_cast<float>(Bbox[1] + Bbox[3]/2.0);
+        center[0] = static_cast<double>(Bbox[0] + Bbox[2]/2.0);
+        center[1] = static_cast<double>(Bbox[1] + Bbox[3]/2.0);
     }
     else {
         throw std::runtime_error("bbox_type必须是 cxcywh、xyxy 或 xywh");
@@ -57,7 +57,7 @@ std::string Package::toString() const {
 }
 
 TimePriorityQueue::TimePriorityQueue(size_t maxCount) 
-    : maxCount(maxCount), queue(std::list<Package>()){}
+    : queue(std::list<Package>()), maxCount(maxCount) {}
 
 bool TimePriorityQueue::isEmpty() const {
     return queue.empty();
@@ -160,12 +160,12 @@ std::string TimePriorityQueue::toString() const {
 
 Module::Module(const std::string& name, size_t maxQueueLength)
     :name(name),
-    maxQueueLength(maxQueueLength),
-    isRunning(true),
     inputQueue(nullptr),
     outputQueue(nullptr),
     inputLock(nullptr),
-    outputLock(nullptr)
+    outputLock(nullptr),
+    maxQueueLength(maxQueueLength),
+    isRunning(true)
 {
     std::cout << "Building " << name << std::endl;
 }
