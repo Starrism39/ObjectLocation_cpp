@@ -7,6 +7,7 @@
 #include <ctime>
 #include <variant>
 #include <atomic>
+#include <iostream>
 
 // Package类用于存储检测和跟踪信息
 class Package {

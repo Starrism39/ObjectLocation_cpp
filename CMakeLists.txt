@@ -43,6 +43,8 @@ else()
   add_definitions(-DDEBUG)
 endif()
 
+file(MAKE_DIRECTORY ${CMAKE_SOURCE_DIR}/build/test)
+file(MAKE_DIRECTORY ${CMAKE_SOURCE_DIR}/build/bin)
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/build)
 
 set(CMAKE_SKIP_INSTALL_RPATH FALSE)
@@ -66,15 +68,15 @@ if(NOT  CMAKE_INSTALL_PREFIX)
 endif()
 message(STATUS "CMAKE_INSTALL_PREFIX :${CMAKE_INSTALL_PREFIX}")
 
-# GeographicLib
-set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};/usr/share/cmake/geographiclib")
-find_package(GeographicLib REQUIRED)
-
-# nlohmann_json
-find_package(nlohmann_json 3.2.0 REQUIRED)
 
 # Eigen
 include_directories("/usr/include/eigen3")
+
+# yaml-cpp
+find_package(yaml-cpp REQUIRED)
+
+# pthread
+find_package(Threads REQUIRED)
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
 include_directories(${PROJECT_SOURCE_DIR}/3rdparty) 
@@ -82,18 +84,13 @@ include_directories(
   ${COMMON_HEADER_DIRS}
 )
 
-
 aux_source_directory(${PROJECT_SOURCE_DIR}/src/modules DET_SRC_DIR)
 aux_source_directory(${PROJECT_SOURCE_DIR}/src/utils DET_SRC_DIR)
 aux_source_directory(${PROJECT_SOURCE_DIR}/src/framework DET_SRC_DIR)
 
-add_executable(RaycastTest test/RaycastTest.cpp ${DET_SRC_DIR})
-add_executable(SpatialTest test/SpatialTest.cpp ${DET_SRC_DIR})
-add_executable(TimeTest test/TimeTest.cpp ${DET_SRC_DIR})
-add_executable(EstiPositionTest test/EstiPositionTest.cpp ${DET_SRC_DIR})
+add_subdirectory(test/)
 
-
-# if(BUILD_TESTS)
-#   add_subdirectory(test)
-# endif()
-
+add_executable(main main.cpp ${DET_SRC_DIR})
+target_link_libraries(main PRIVATE Threads::Threads yaml-cpp)
+set_target_properties(main PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${EXECUTABLE_OUTPUT_PATH}/bin)

@@ -110,7 +110,7 @@ int main() {
     const int MAX_HISTORY = 10;  // 历史记录最大长度
     
     // 创建空间滤波器实例
-    SpatialFilter filter(DISTANCE_THRESHOLD, MAX_HISTORY, MAX_HISTORY);
+    SpatialFilter filter(1000, DISTANCE_THRESHOLD, MAX_HISTORY, MAX_HISTORY);
     
     // 生成模拟数据
     std::vector<Package> packages = generateSimulatedData(rng, NUM_TARGETS, NUM_UAVS);

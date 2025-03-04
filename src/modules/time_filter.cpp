@@ -1,9 +1,11 @@
 #include "modules/time_filter.h"
 #include <algorithm>
 
-TimeFilter::TimeFilter(int max_queue_length): max_queue_length(max_queue_length){}
+TimeFilter::TimeFilter(double time_slice, int max_queue_length): 
+                                    PreProcess::PreProcess("TimeFilter", time_slice, max_queue_length),
+                                    max_queue_length(max_queue_length){}
 
-std::vector<Package> TimeFilter::process(const std::vector<Package>& data) {
+std::vector<Package> TimeFilter::process(std::vector<Package>& data) {
     std::unordered_map<std::string, Package> temp_map;
 
     // 逆序处理数据包

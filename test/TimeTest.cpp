@@ -109,7 +109,7 @@ int main() {
     time_t base_time = std::time(nullptr);
     
     // 创建时间滤波器实例
-    TimeFilter filter(MAX_QUEUE_LENGTH);
+    TimeFilter filter(1.0, MAX_QUEUE_LENGTH);
     
     // 生成并处理第一帧数据
     std::cout << "处理第一帧数据：" << std::endl;

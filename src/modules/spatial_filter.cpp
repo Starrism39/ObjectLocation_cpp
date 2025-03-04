@@ -93,7 +93,8 @@ void CircularQueue::setMaxGlobalId(int id) {
     max_global_id = id;
 }
 
-SpatialFilter::SpatialFilter(double distance_threshold ,int max_map, int max_queue_length):
+SpatialFilter::SpatialFilter(double time_slice, double distance_threshold ,int max_map, int max_queue_length):
+    Filter::Filter("SpatialFilter", time_slice, max_queue_length),
     distance_threshold(distance_threshold),
     max_map(max_map),
     max_queue_length(max_queue_length),

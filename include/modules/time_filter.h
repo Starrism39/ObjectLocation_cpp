@@ -2,12 +2,12 @@
 #include <string>
 #include <unordered_map>
 
-#include"framework/module.h"
+#include"framework/preprocess.h"
 
-class TimeFilter {
+class TimeFilter : public PreProcess {
 public:
-    TimeFilter(int max_queue_length);
-    std::vector<Package> process(const std::vector<Package>& data);
+    TimeFilter(double time_slice, int max_queue_length);
+    std::vector<Package> process(std::vector<Package>& data) override;
     
 private:
     int max_queue_length;

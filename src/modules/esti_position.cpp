@@ -15,7 +15,8 @@ EstiPosition::EstiPosition(bool is_multi_map,
                         int block_num,
                         double overlap_x_scale,
                         double overlap_y_scale)
-    : is_multi_map(is_multi_map), 
+    : Location::Location("EstiPosition", max_queue_length),
+    is_multi_map(is_multi_map), 
     order(order), 
     default_height(default_height), 
     enable(enable){

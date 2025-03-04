@@ -3,7 +3,7 @@
 #include <string>
 #include <Eigen/Dense>
 
-#include"framework/module.h"
+#include"framework/filter.h"
 class CircularQueue {
 private:
     int capacity;
@@ -43,7 +43,7 @@ public:
     std::vector<std::map<std::string, int>>& getQueue() { return queue; }
 };
 
-class SpatialFilter{
+class SpatialFilter : public Filter{
 private:
     double distance_threshold;
     int max_map;
@@ -56,6 +56,6 @@ private:
     std::vector<Package> findGlobal(std::map<int, std::vector<Package>>& grouped_detections);
 
 public:
-    SpatialFilter(double distance_threshold ,int max_map, int max_queue_length);
-    std::vector<Package> process(const std::vector<Package>& packages);
+    SpatialFilter(double time_slice, double distance_threshold ,int max_map, int max_queue_length);
+    std::vector<Package> process(const std::vector<Package>& packages) override;
 };

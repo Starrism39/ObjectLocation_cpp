@@ -3,20 +3,20 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
-#include "framework/module.h"
+#include "framework/location.h"
 #include "utils/mesh_raycast.h"
 #include "utils/npy_reader.h"
 #include "utils/utils.h"
 // #include "utils/mesh_raycast.h"  // TODO
 
-class EstiPosition {
+class EstiPosition : public Location{
 public:
     EstiPosition(bool is_multi_map = false,
                 const std::string& mesh_pash = "",
                 double default_height = 60,
                 const std::string&  order = "rzyx",
                 bool enable = true,
-                int max_queue_length = -1,
+                int max_queue_length = 0,
                 int multi_num = 2,
                 const std::vector<double>& downSampled_scale = {0.2, 0.1},
                 const std::vector<std::vector<double>>& split_scale = {{10, 10}, {5, 5}},
@@ -27,7 +27,7 @@ public:
 
     std::vector<double> getPoint(const Package& data);
     std::vector<double> getPointFormUavObjectPoint(const Package& data);
-    void process(Package& data);
+    void process(Package& data) override;
 
 private:
     bool is_multi_map;
