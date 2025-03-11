@@ -5,7 +5,7 @@ global:
   time_slice: &time_slice 0 # 时间线融合, 可以调整, 单位ms
   enable_reloaction: &enable_reloaction False
   order: &order "rzyx" # 固定参数
-  max_queue_length: &max_queue_length 100
+  max_queue_length: &max_queue_length 1000
 
 input:
 
@@ -46,7 +46,7 @@ pipeline:
 
   stage2:
     idx: 2
-    parallel: 1  # 并行数，不建议大于1，当并行数大于图中目标数时会有bug，待解决
+    parallel: 4  # 并行数，不建议太大
     name: "EstiPosition"
     args:
       is_multi_map : False

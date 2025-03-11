@@ -102,8 +102,7 @@ std::vector<Package> TimePriorityQueue::getTimeSlice(double timeSlice) {
 
     double stopTime = queue.back().time + timeSlice;  // 默认值为最小时间+时间间隔
     
-    // 查找分界标志
-    // 注：当有多个定位线程时不适用，因为队列顺序会被打乱！若无此逻辑可能会丢失最后两张图的Package
+    // // 查找分界标志
     // for (auto it = queue.rbegin(); it != queue.rend(); ++it) {
     //     if (it->delim_flag) {
     //         stopTime = it->time;

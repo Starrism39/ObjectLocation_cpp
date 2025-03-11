@@ -82,7 +82,7 @@ std::shared_ptr<DataPackage> CreateTestDatapackage(uint64_t timestamp, uint8_t u
 }
 
 // 工厂函数，根据配置创建模块实例
-Module *createModule(const std::string &name, const YAML::Node &args)
+Module *createModule(YAML::Node config, const std::string &name, const YAML::Node &args)
 {
 
     if (name == "TimeFilter")
@@ -151,6 +151,7 @@ Module *createModule(const std::string &name, const YAML::Node &args)
             args["time_slice"].as<double>(),
             args["distance_threshold"].as<double>(),
             args["max_map"].as<int>(),
+            config["pipeline"]["stage2"]["parallel"].as<int>(),
             args["max_queue_length"].IsDefined() ? args["max_queue_length"].as<int>() : 0);
     }
 
@@ -203,7 +204,7 @@ int main(int argc, char *argv[])
             // 创建指定数量的并行模块
             for (int i = 0; i < parallel; ++i)
             {
-                Module *module = createModule(module_name, args);
+                Module *module = createModule(config, module_name, args);
                 stage_modules.push_back(module);
             }
 
