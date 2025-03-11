@@ -152,9 +152,10 @@ void EstiPosition::process(Package& data) {
         data.location = getPointFormUavObjectPoint(data);
     }
     
-    // 检查位置是否在默认高度，如果是则使用无人机UTM坐标
+    // 检查位置是否在默认高度，如果是则清除目标向量
     if (data.location.size() >= 3 && std::abs(data.location[2] - default_height) < 1e-6) {
         data.location = data.uav_utm;
+        // data.location.clear();
     }
     
     // 极端值的调试输出

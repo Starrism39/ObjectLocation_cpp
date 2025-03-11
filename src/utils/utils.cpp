@@ -36,7 +36,7 @@ std::vector<double> setDistortionCoeffs(const std::vector<double>& distortion_pa
     return {k1, k2, k3, p1, p2};
 }
 
-CameraMatrix setK(const std::vector<double>& cam_K) {
+CameraMatrixUtils setK(const std::vector<double>& cam_K) {
     // 从输入向量中获取相机参数
     double fx = cam_K[0];  // 焦距x
     double fy = cam_K[1];  // 焦距y

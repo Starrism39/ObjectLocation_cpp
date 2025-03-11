@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <sstream>
 
+
 // Package实现
 Package::Package(time_t time) : 
     time(time),
@@ -102,20 +103,21 @@ std::vector<Package> TimePriorityQueue::getTimeSlice(double timeSlice) {
     double stopTime = queue.back().time + timeSlice;  // 默认值为最小时间+时间间隔
     
     // 查找分界标志
-    for (auto it = queue.rbegin(); it != queue.rend(); ++it) {
-        if (it->delim_flag) {
-            stopTime = it->time;
-            break;
-        }
-    }
+    // 注：当有多个定位线程时不适用，因为队列顺序会被打乱！若无此逻辑可能会丢失最后两张图的Package
+    // for (auto it = queue.rbegin(); it != queue.rend(); ++it) {
+    //     if (it->delim_flag) {
+    //         stopTime = it->time;
+    //         break;
+    //     }
+    // }
 
     // 找到分界点
     auto splitIt = std::find_if(queue.begin(), queue.end(),
         [stopTime](const Package& p) { return p.time <= stopTime; });
 
-    if (splitIt != queue.end()) {
-        splitIt->delim_flag = 1;
-    }
+    // if (splitIt != queue.end()) {
+    //     splitIt->delim_flag = 1;
+    // }
 
     // 提取时间片段并返回
     std::vector<Package> timeSliceList(splitIt, queue.end());
@@ -189,10 +191,55 @@ void Module::setOutputQueue(std::shared_ptr<TimePriorityQueue> outputQueue) {
     }
 }
 
+std::shared_ptr<TimePriorityQueue> Module::getOutputQueue(){
+    return this->outputQueue;
+}
+
+std::shared_ptr<std::mutex> Module::getOutputLock(){
+    return this->outputLock;
+}
+
 void Module::close() {
     isRunning = false;
 }
 
 std::string Module::toString() const {
     return name;
+}
+
+
+// 辅助函数：打印Package内容
+template <typename T>
+void PrintVector(const std::string &name, const std::vector<T> &vec)
+{
+    std::cout << name << ": [";
+    for (size_t i = 0; i < vec.size(); ++i)
+    {
+        std::cout << vec[i];
+        if (i < vec.size() - 1)
+            std::cout << ", ";
+    }
+    std::cout << "]" << std::endl;
+}
+
+void PrintPackage(const Package &pkg)
+{
+    std::cout << "\n=== Package 信息 ===" << std::endl;
+    std::cout << "时间戳: " << pkg.time << std::endl;
+    std::cout << "UAV ID: " << pkg.uav_id << std::endl;
+    std::cout << "相机ID: " << pkg.camera_id << std::endl;
+    PrintVector("相机姿态", pkg.camera_pose);
+    PrintVector("相机内参", pkg.camera_K);
+    PrintVector("相机畸参", pkg.camera_distortion);
+    PrintVector("边界框", pkg.Bbox);
+    PrintVector("归一化边界框", pkg.norm_Bbox);
+    PrintVector("无深度目标UTM", pkg.uav_utm);
+    std::cout << "类别ID: " << pkg.class_id << std::endl;
+    std::cout << "类别名称: " << pkg.class_name << std::endl;
+    std::cout << "跟踪器ID: " << pkg.tracker_id << std::endl;
+    std::cout << "UID: " << pkg.uid << std::endl;
+    std::cout << "global_id: " << pkg.global_id << std::endl;
+    PrintVector("目标UTM位置", pkg.location);
+    auto center = pkg.getCenterPoint();
+    std::cout << "目标中心点: [" << center[0] << ", " << center[1] << "]" << std::endl;
 }

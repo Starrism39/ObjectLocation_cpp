@@ -15,7 +15,14 @@ private:
     void build();
 
 public:
-    Pipeline(const std::vector<std::vector<Module*>>& raw_modules);
+    Pipeline(const std::vector<std::vector<Module*>>& raw_modules, std::shared_ptr<TimePriorityQueue> inputQueue, std::shared_ptr<std::mutex> inputLock);
+
+    void setInputLock(std::shared_ptr<std::mutex> lock);
+    void setInputQueue(std::shared_ptr<TimePriorityQueue> inputQueue);
     
-    void run();
+    void join();
+
+protected:
+    std::shared_ptr<TimePriorityQueue> inputQueue;
+    std::shared_ptr<std::mutex> inputLock;
 };

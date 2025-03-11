@@ -191,6 +191,7 @@ std::pair<std::vector<std::vector<Package>>, int> SpatialFilter::spatialFilter1(
     
     return {detections_list, local_id};
 }
+
 std::map<int, std::vector<Package>> SpatialFilter::spatialFilter2(const std::vector<std::vector<std::vector<Package>>>& class_list){
     std::map<int, std::vector<Package>> grouped_detections;
 
@@ -233,11 +234,6 @@ std::map<int, std::vector<Package>> SpatialFilter::spatialFilter2(const std::vec
             };
         }
         
-        // 按uav_id排序
-        std::sort(group.begin(), group.end(), 
-                    [](const Package& a, const Package& b) {
-                        return a.uav_id < b.uav_id;
-                    });
     }
     
     return grouped_detections;
@@ -324,7 +320,25 @@ std::vector<Package> SpatialFilter::findGlobal(std::map<int, std::vector<Package
     // 更新历史记录
     global_history.enqueue(current_track);
     
-    return return_data;
+    // 去重：保留每个global_id的第一个包
+    std::set<int> processed_global_ids;
+    std::vector<Package> fused_result;
+
+    for (const auto& pkg : return_data) {
+        // 如果这个global_id还没有处理过，则保留
+        if (processed_global_ids.find(pkg.global_id) == processed_global_ids.end()) {
+            fused_result.push_back(pkg);
+            processed_global_ids.insert(pkg.global_id);
+        }
+    }
+
+    // 按uav_id排序
+    std::sort(fused_result.begin(), fused_result.end(), 
+    [](const Package& a, const Package& b) {
+        return a.uav_id < b.uav_id;
+    });
+
+    return fused_result;
 }
 
 std::vector<Package> SpatialFilter::process(const std::vector<Package>& packages) {

@@ -36,8 +36,17 @@ void PreProcess::run() {
         // 处理数据
         packages = process(packages);
 
+        // // 打印处理结果
+        // std::cout << std::string(3, '\n');
+        // std::cout << "==================== time filter ====================" << std::endl;
+        // std::cout << "time fliter处理后得到 " << packages.size() << " 个数据包" << std::endl;
+
+
         // 输出处理后的数据
         for (const auto& package : packages) {
+            // // 打印每个包的信息
+            // PrintPackage(package);
+
             // 等待输出队列有空间
             while (outputQueue->isFull()) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(100));

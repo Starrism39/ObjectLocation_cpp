@@ -78,6 +78,9 @@ find_package(yaml-cpp REQUIRED)
 # pthread
 find_package(Threads REQUIRED)
 
+# opencv
+find_package(OpenCV REQUIRED)
+
 include_directories(${PROJECT_SOURCE_DIR}/include)
 include_directories(${PROJECT_SOURCE_DIR}/3rdparty) 
 include_directories(
@@ -87,10 +90,12 @@ include_directories(
 aux_source_directory(${PROJECT_SOURCE_DIR}/src/modules DET_SRC_DIR)
 aux_source_directory(${PROJECT_SOURCE_DIR}/src/utils DET_SRC_DIR)
 aux_source_directory(${PROJECT_SOURCE_DIR}/src/framework DET_SRC_DIR)
+aux_source_directory(${PROJECT_SOURCE_DIR}/src/input DET_SRC_DIR)
 
 add_subdirectory(test/)
 
-add_executable(main main.cpp ${DET_SRC_DIR})
-target_link_libraries(main PRIVATE Threads::Threads yaml-cpp)
-set_target_properties(main PROPERTIES
+
+    add_executable(main_test main_test.cpp ${DET_SRC_DIR})
+target_link_libraries(main_test PRIVATE Threads::Threads yaml-cpp ${OpenCV_LIBS})
+set_target_properties(main_test PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${EXECUTABLE_OUTPUT_PATH}/bin)

@@ -1,6 +1,7 @@
 #include "modules/time_filter.h"
 #include <algorithm>
 
+
 TimeFilter::TimeFilter(double time_slice, int max_queue_length): 
                                     PreProcess::PreProcess("TimeFilter", time_slice, max_queue_length),
                                     max_queue_length(max_queue_length){}
@@ -20,10 +21,7 @@ std::vector<Package> TimeFilter::process(std::vector<Package>& data) {
             Package& exist_pkg = existing->second;
             if (exist_pkg.time < pkg.time) {
                 Package new_pkg = pkg.copy();
-                // 保留旧数据的图像
-                if (!exist_pkg.obj_img.empty()) {
-                    new_pkg.obj_img = exist_pkg.obj_img;
-                }
+                new_pkg.dp = exist_pkg.dp;
                 temp_map[map_key] = new_pkg;
             }
         }

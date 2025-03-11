@@ -52,6 +52,7 @@ int main() {
     test_pkg.norm_Bbox = {0.5, 0.5, 0.2, 0.3};                   // 归一化BBox
     initBBoxParameters(test_pkg);
     test_pkg.uav_utm = simulateBBoxProjection(test_pkg);                    // 无人机UTM坐标
+    PrintPackage(test_pkg);
 
     // ---------------------- 场景1：启用相机位姿定位 ----------------------
     {

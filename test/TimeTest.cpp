@@ -65,16 +65,6 @@ std::vector<Package> generateSimulatedData(RandomGenerator& rng, int num_targets
                 // 模拟边界框
                 pkg.Bbox = {rng.generateInt(0, 1920), rng.generateInt(0, 1080), 100, 200};
                 
-                // 设置无人机位置
-                pkg.uav_wgs = {
-                    static_cast<float>(base_lat + rng.generateFloat(-0.001, 0.001)),
-                    static_cast<float>(base_lon + rng.generateFloat(-0.001, 0.001)),
-                    static_cast<float>(base_alt + 100.0)  // 无人机高度比目标高100米
-                };
-                
-                // 模拟图像数据（这里用简单字符串表示）
-                pkg.obj_img = "Image_"+ std::to_string(target) + "_" + std::to_string(uav) + "_" + std::to_string(t);
-                
                 packages.push_back(pkg);
             }
         }
@@ -89,7 +79,6 @@ void printPackageInfo(const Package& pkg) {
               << ", UAV: " << pkg.uav_id
               << ", Tracker ID: " << pkg.tracker_id
               << ", Class: " << pkg.class_name
-              << ", Image: " << pkg.obj_img
               << "\nLocation: [" 
               << std::fixed << std::setprecision(6)
               << pkg.location[0] << ", "

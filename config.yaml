@@ -2,10 +2,18 @@
 global:
   map_path: &map_path "/home/xjy/code/location_Map/test_1/data/mesh_triangles.npy" #可更换地图
  # multi_map_path: &multi_map_path "data/map/yumen/Tile_geo.pkl" #暂未实现
-  time_slice: &time_slice 1000 # 时间线融合, 可以调整, 单位ms
-  enable_reloaction: &enable_reloaction False # 默认，不可修改
+  time_slice: &time_slice 0 # 时间线融合, 可以调整, 单位ms
+  enable_reloaction: &enable_reloaction False
   order: &order "rzyx" # 固定参数
   max_queue_length: &max_queue_length 100
+
+input:
+
+  stage1:
+    idx: 1
+    name: "DataConvert"
+    args:
+      max_queue_length: *max_queue_length
 
 pipeline:
 
@@ -17,8 +25,8 @@ pipeline:
       time_slice: *time_slice
       max_queue_length: *max_queue_length
 
-  # stage4:
-  #   idx: 4
+  # stage2:
+  #   idx: 2
   #   parallel: 4  # 并行数，根据机器性能调整
   #   name: "EstiPosition"
   #   args:
@@ -38,7 +46,7 @@ pipeline:
 
   stage2:
     idx: 2
-    parallel: 1  # 并行数，根据机器性能调整
+    parallel: 1  # 并行数，不建议大于1，当并行数大于图中目标数时会有bug，待解决
     name: "EstiPosition"
     args:
       is_multi_map : False
@@ -55,6 +63,6 @@ pipeline:
     parallel: 1
     args:
       time_slice: *time_slice
-      distance_threshold: 10.0 #多机融合距离阈值，两个目标不可以长时间在这个距离内相
+      distance_threshold: 10.0 #多机融合距离阈值
       max_map: 100
       max_queue_length: *max_queue_length

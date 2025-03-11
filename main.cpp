@@ -120,9 +120,7 @@ int main(int argc, char* argv[]) {
         
         // 创建并运行管道
         Pipeline pipeline(pipelines);
-        
-        
-        pipeline.run();
+        pipeline.join();
         
     } catch (const YAML::Exception& e) {
         std::cerr << "Error parsing YAML file: " << e.what() << std::endl;

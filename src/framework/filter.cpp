@@ -20,12 +20,19 @@ void Filter::run(){
         if(packages.empty()) continue;
 
         packages = process(packages);
+
+        // 打印处理结果
+        std::cout << std::string(3, '\n');
+        std::cout << "==================== spatial filter ====================" << std::endl;
+        std::cout << "spatial fliter处理后得到 " << packages.size() << " 个数据包" << std::endl;
+
         for(const auto& package : packages){
             while(outputQueue->isFull()){
                 std::this_thread::sleep_for(std::chrono::milliseconds(100));
             }
             
             outputLock->lock();
+            PrintPackage(package);
             outputQueue->push(package);
             outputLock->unlock();
         }

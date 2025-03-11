@@ -9,12 +9,14 @@
 #include <atomic>
 #include <iostream>
 
+#include "input/package.h"
+
 // Package类用于存储检测和跟踪信息
 class Package {
 public:
     Package(time_t time = 0);
     
-    // 只读成员
+    // 只读成员，由相机DataPackage类得到的数据
     time_t time;
     std::string uav_id = "";
     int camera_id = -1;
@@ -23,13 +25,14 @@ public:
     std::vector<double> camera_distortion;  // [k1,k2,p1,p2,k3]
     std::vector<int> Bbox;           // [x,y,w,h]
     std::vector<double> norm_Bbox;    // [x,y,w,h] 归一化后的bbox
-    int class_id = -1;                    // 0:人 1:车
+    int class_id = -1;
     std::string class_name = "";
     int tracker_id = -1;
-    std::vector<double> uav_wgs;      // WGS84 [lat,lon,alt]
     std::vector<double> uav_utm;      // UTM坐标
-    std::string obj_img = "";
+    std::shared_ptr<DataPackage> dp;
     
+
+    // 以下成员全是本模块后续需要填入的参数
     // 用于评估
     int uid = -1;
     
@@ -94,6 +97,8 @@ public:
     void setOutputLock(std::shared_ptr<std::mutex> lock);
     void setInputQueue(std::shared_ptr<TimePriorityQueue> inputQueue);
     void setOutputQueue(std::shared_ptr<TimePriorityQueue> outputQueue);
+    std::shared_ptr<TimePriorityQueue> getOutputQueue();
+    std::shared_ptr<std::mutex> getOutputLock();
     
     virtual void run() = 0;
     virtual void close();
@@ -109,3 +114,8 @@ protected:
     std::atomic<bool> isRunning;
 };
 
+
+// 辅助函数：打印Package内容
+template <typename T>
+void PrintVector(const std::string &name, const std::vector<T> &vec);
+void PrintPackage(const Package &pkg);

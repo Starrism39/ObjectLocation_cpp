@@ -1,6 +1,8 @@
 #include"framework/pipeline.h"
 
-Pipeline::Pipeline(const std::vector<std::vector<Module*>>& raw_modules) {
+Pipeline::Pipeline(const std::vector<std::vector<Module*>>& raw_modules, std::shared_ptr<TimePriorityQueue> inputQueue, std::shared_ptr<std::mutex> inputLock) {
+    setInputLock(inputLock);
+    setInputQueue(inputQueue);
     // 将原始指针转换为shared_ptr
     modules.resize(raw_modules.size());
     for (size_t i = 0; i < raw_modules.size(); ++i) {
@@ -12,6 +14,12 @@ Pipeline::Pipeline(const std::vector<std::vector<Module*>>& raw_modules) {
     build();
 }
 
+void Pipeline::setInputLock(std::shared_ptr<std::mutex> lock){this->inputLock = lock;}
+
+void Pipeline::setInputQueue(std::shared_ptr<TimePriorityQueue> inputQueue){this->inputQueue = inputQueue;}
+
+
+// 正常流程
 // void Pipeline::build() {
 //     for (size_t stages = 0; stages < modules.size(); ++stages) {
 //         queue_list.push_back(std::make_shared<TimePriorityQueue>());
@@ -33,10 +41,11 @@ Pipeline::Pipeline(const std::vector<std::vector<Module*>>& raw_modules) {
 //     }
 // }
 
+// 输入来源不在框架时（也就是需要借助外来数据包）：
 void Pipeline::build() {
     // 创建初始输入队列（首阶段之前的队列）
-    queue_list.push_back(std::make_shared<TimePriorityQueue>());
-    lock_list.push_back(std::make_shared<std::mutex>());
+    queue_list.push_back(inputQueue);
+    lock_list.push_back(inputLock);
     
     for (size_t stage = 0; stage < modules.size(); ++stage) {
         // 当前阶段的输出队列
@@ -60,8 +69,9 @@ void Pipeline::build() {
 }
 
 
-void Pipeline::run() {
+void Pipeline::join() {
     for (auto& thread : thread_pool) {
         thread.join();
     }
+    std::cout << "all join" << std::endl;
 }

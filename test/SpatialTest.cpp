@@ -68,12 +68,6 @@ std::vector<Package> generateSimulatedData(RandomGenerator& rng, int num_targets
             // 模拟边界框
             pkg.Bbox = {rng.generateInt(0, 1920), rng.generateInt(0, 1080), 100, 200};
             
-            // 设置无人机位置
-            pkg.uav_wgs = {
-                static_cast<float>(base_lat + rng.generateFloat(-0.001, 0.001)),
-                static_cast<float>(base_lon + rng.generateFloat(-0.001, 0.001)),
-                static_cast<float>(base_alt + 100.0)  // 无人机高度比目标高100米
-            };
 
             
             packages.push_back(pkg);
