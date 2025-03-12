@@ -66,8 +66,8 @@ std::shared_ptr<DataPackage> Output::process(const std::vector<Package>& package
         Bbox rect{
             static_cast<uint16_t>(pkg.Bbox[0]), 
             static_cast<uint16_t>(pkg.Bbox[1]), 
-            static_cast<uint16_t>(pkg.Bbox[3]), 
-            static_cast<uint16_t>(pkg.Bbox[4])
+            static_cast<uint16_t>(pkg.Bbox[2]), 
+            static_cast<uint16_t>(pkg.Bbox[3])
         };
         double wgs84[3];
         UTMToWGS84(pkg.location, wgs84);

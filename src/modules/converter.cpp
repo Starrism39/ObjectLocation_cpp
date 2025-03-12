@@ -113,6 +113,11 @@ Package PackageConverter::ConvertSingleObject(const std::shared_ptr<DataPackage>
         static_cast<int>(obj.rect.h)
     };
 
+    // std::cout << "bbox: x=" << pkg.Bbox[0]
+    //           << ", y=" << pkg.Bbox[1]
+    //           << ", w=" << pkg.Bbox[2]
+    //           << ", h=" << pkg.Bbox[3] << std::endl;
+
     pkg.prob = obj.prob;
     
     // 设置归一化边界框
