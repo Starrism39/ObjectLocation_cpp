@@ -28,6 +28,12 @@ void DataPackage::set_camera_info(const uint8_t uav_id, const uint8_t camera_typ
     memcpy(this->camera_info_.cm.data, cm, sizeof(double) * 6);
 }
 
+void DataPackage::clear_object_info()
+{
+    this->obj_num_ = 0;
+    this->object_info_.clear();
+}
+
 void DataPackage::set_obj_num(uint8_t obj_num)
 {
     this->obj_num_ = obj_num;
@@ -385,4 +391,39 @@ void DataPackage::unpack_objinfo(const uint8_t *data, ObjectInfo &obj)
     aligned_rect.w = (data[4] << 2) | ((data[6] >> 2) & 0x3);
     aligned_rect.h = (data[5] << 2) | (data[6] & 0x3);
     obj.rect = this->unalign_bbox(aligned_rect);
+}
+
+void printObjectInfo(const std::shared_ptr<DataPackage>& data) {
+    if (!data) {
+        std::cout << "DataPackage is null" << std::endl;
+        return;
+    }
+
+    uint8_t obj_num = data->get_obj_num();
+    std::cout << "Total objects: " << static_cast<int>(obj_num) << std::endl;
+    
+    if (obj_num == 0) {
+        std::cout << "No objects detected." << std::endl;
+        return;
+    }
+
+    std::cout << "TimeStamp: " << data->get_timestamp() << std::endl;
+    std::cout << "obj nums are " << static_cast<int>(data->get_obj_num()) << std::endl;
+
+    std::vector<ObjectInfo> objects = data->get_object_info();
+    
+    for (size_t i = 0; i < objects.size(); ++i) {
+        const auto& obj = objects[i];
+        std::cout << "Object " << i + 1 << ":" << std::endl;
+        std::cout << "  Bbox: x=" << obj.rect.x 
+                  << ", y=" << obj.rect.y
+                  << ", w=" << obj.rect.w 
+                  << ", h=" << obj.rect.h << std::endl;
+        std::cout << "  Class ID: " << static_cast<int>(obj.label) << std::endl;
+        std::cout << "  Score: " << obj.prob << std::endl;
+        std::cout << "  wgs84: " << obj.wgs84[0]
+                  << ", "<< obj.wgs84[1]
+                  << ", "<< obj.wgs84[2] << std::endl;
+        std::cout << std::endl;
+    }
 }

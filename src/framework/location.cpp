@@ -15,8 +15,8 @@ void Location::run()
 
         if (inputQueue->isEmpty())
         {
-            // std::this_thread::sleep_for(std::chrono::milliseconds(1000));
             inputLock->unlock();
+            std::this_thread::sleep_for(std::chrono::milliseconds(5));
             continue;
         }
 

@@ -66,3 +66,10 @@ pipeline:
       distance_threshold: 10.0 #多机融合距离阈值
       max_map: 100
       max_queue_length: *max_queue_length
+
+  stage4:
+    idx: 4
+    name: "Output"
+    parallel: 1
+    args:
+      max_queue_length: *max_queue_length

@@ -9,6 +9,7 @@
 Package::Package(time_t time) : 
     time(time),
     camera_id(-1),
+    prob(0.0),
     class_id(-1),
     tracker_id(-1),
     uid(-1),
@@ -89,6 +90,10 @@ Package TimePriorityQueue::pop() {
     Package package = queue.back();
     queue.pop_back();
     return package;
+}
+
+Package TimePriorityQueue::peek() {
+    return queue.back();
 }
 
 void TimePriorityQueue::clear() {

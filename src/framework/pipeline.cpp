@@ -48,18 +48,23 @@ void Pipeline::build() {
     lock_list.push_back(inputLock);
     
     for (size_t stage = 0; stage < modules.size(); ++stage) {
-        // 当前阶段的输出队列
-        queue_list.push_back(std::make_shared<TimePriorityQueue>());
-        lock_list.push_back(std::make_shared<std::mutex>());
+        // 只有不是最后一个阶段时才创建输出队列
+        if (stage < modules.size() - 1) {
+            queue_list.push_back(std::make_shared<TimePriorityQueue>());
+            lock_list.push_back(std::make_shared<std::mutex>());
+        }
         
         for (size_t m = 0; m < modules[stage].size(); ++m) {
             auto& module = modules[stage][m];
             // 输入队列为前一阶段的输出队列
             module->setInputQueue(queue_list[stage]);
             module->setInputLock(lock_list[stage]);
-            // 输出队列为当前阶段的输出队列
-            module->setOutputQueue(queue_list[stage + 1]);
-            module->setOutputLock(lock_list[stage + 1]);
+            
+            // 只有不是最后一个阶段时才设置输出队列
+            if (stage < modules.size() - 1) {
+                module->setOutputQueue(queue_list[stage + 1]);
+                module->setOutputLock(lock_list[stage + 1]);
+            }
             
             thread_pool.emplace_back([module]() {
                 module->run();
@@ -67,7 +72,6 @@ void Pipeline::build() {
         }
     }
 }
-
 
 void Pipeline::join() {
     for (auto& thread : thread_pool) {

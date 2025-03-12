@@ -112,6 +112,8 @@ Package PackageConverter::ConvertSingleObject(const std::shared_ptr<DataPackage>
         static_cast<int>(obj.rect.w),
         static_cast<int>(obj.rect.h)
     };
+
+    pkg.prob = obj.prob;
     
     // 设置归一化边界框
     pkg.norm_Bbox = NormalizeBbox(obj.rect, pkg.camera_id);
@@ -143,6 +145,7 @@ std::vector<Package> PackageConverter::ConvertToPackages(const std::shared_ptr<D
     for (const auto& obj : objects) {
         packages.push_back(ConvertSingleObject(data_pkg, obj));
     }
+    data_pkg->clear_object_info();
     
     return packages;
 }

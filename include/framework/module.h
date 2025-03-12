@@ -25,6 +25,7 @@ public:
     std::vector<double> camera_distortion;  // [k1,k2,p1,p2,k3]
     std::vector<int> Bbox;           // [x,y,w,h]
     std::vector<double> norm_Bbox;    // [x,y,w,h] 归一化后的bbox
+    float prob = 0.0;                        // 置信度
     int class_id = -1;
     std::string class_name = "";
     int tracker_id = -1;
@@ -42,7 +43,7 @@ public:
     // 读写成员
     int global_id = -1;
     int local_id = -1;
-    std::vector<double> location;     // UTM
+    std::vector<double> location;     // 目标UTM
     
     // 方法
     std::vector<double> getCenterPoint() const;
@@ -63,6 +64,7 @@ public:
     bool isFull() const;
     int push(const Package& package);
     Package pop();
+    Package peek();
     void clear();
     std::vector<Package> getTimeSlice(double timeSlice);
     double deltaTime() const;

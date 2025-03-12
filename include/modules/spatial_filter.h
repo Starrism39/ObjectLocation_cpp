@@ -44,6 +44,11 @@ public:
 };
 
 class SpatialFilter : public Filter{
+
+public:
+    SpatialFilter(double time_slice, double distance_threshold, int max_map, int parallel = 1, int max_queue_length = 0);
+    std::vector<Package> process(const std::vector<Package>& packages) override;
+
 private:
     double distance_threshold;
     int max_map;
@@ -55,7 +60,4 @@ private:
     std::map<int, std::vector<Package>> spatialFilter2(const std::vector<std::vector<std::vector<Package>>>& class_list);
     std::vector<Package> findGlobal(std::map<int, std::vector<Package>>& grouped_detections);
 
-public:
-    SpatialFilter(double time_slice, double distance_threshold ,int max_map, int parallel = 1, int max_queue_length = 0);
-    std::vector<Package> process(const std::vector<Package>& packages) override;
 };

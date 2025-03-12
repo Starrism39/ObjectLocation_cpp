@@ -8,7 +8,8 @@
 
 class PackageConverter {
 public:
-    PackageConverter(const std::string& name, std::shared_ptr<std::vector<std::shared_ptr<DataPackage>>>& input_queue,
+    PackageConverter(const std::string& name, 
+        std::shared_ptr<std::vector<std::shared_ptr<DataPackage>>>& input_queue,
         std::shared_ptr<TimePriorityQueue>& output_queue,
         std::shared_ptr<std::mutex> inputLock,
         std::shared_ptr<std::mutex> outputLock);
