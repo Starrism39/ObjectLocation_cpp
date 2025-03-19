@@ -163,6 +163,7 @@ Module *createModule(YAML::Node config, const std::string &name, const YAML::Nod
     else if (name == "Output")
     {
         return new Output(
+            args["time_slice"].as<double>(),
             args["max_queue_length"].IsDefined() ? args["max_queue_length"].as<int>() : 0);
     }
 
@@ -235,48 +236,69 @@ int main(int argc, char *argv[])
         // 创建测试数据包
         std::vector<std::shared_ptr<DataPackage>> test_packages;
 
-        // 场景1：电视相机，多个目标
+
         std::vector<ObjectInfo> objects1 = {
             CreateTestObject(0, 1, 1),
             CreateTestObject(0, 2, 2),
             CreateTestObject(0, 3, 1)};
         test_packages.push_back(CreateTestDatapackage(1634567890, 1, 0, objects1));
 
-        // 场景2：红外相机，多个目标
+
         std::vector<ObjectInfo> objects2 = {
             CreateTestObject(0, 1, 3),
             CreateTestObject(0, 2, 3)};
-        test_packages.push_back(CreateTestDatapackage(1634567892, 2, 1, objects2));
+        test_packages.push_back(CreateTestDatapackage(1634567890, 2, 1, objects2));
 
-        // 场景3：微光相机，多个目标
+
         std::vector<ObjectInfo> objects3 = {
             CreateTestObject(0, 1, 1),
             CreateTestObject(0, 2, 4),
             CreateTestObject(0, 3, 3),
             CreateTestObject(0, 4, 2)};
-        test_packages.push_back(CreateTestDatapackage(1634567894, 3, 2, objects3));
+        test_packages.push_back(CreateTestDatapackage(1634567890, 3, 2, objects3));
 
-        // 场景4：微光相机，多个目标
+
         std::vector<ObjectInfo> objects4 = {
             CreateTestObject(0, 1, 1),
             CreateTestObject(0, 2, 4),
             CreateTestObject(0, 3, 3)};
-        test_packages.push_back(CreateTestDatapackage(1634567896, 3, 2, objects4));
+        test_packages.push_back(CreateTestDatapackage(1634567892, 3, 2, objects4));
 
-        // 场景5：红外相机，多个目标
+
         std::vector<ObjectInfo> objects5 = {
             CreateTestObject(0, 1, 1),
             CreateTestObject(0, 2, 4),
             CreateTestObject(0, 3, 3)};
-        test_packages.push_back(CreateTestDatapackage(1634567898, 2, 1, objects5));
+        test_packages.push_back(CreateTestDatapackage(1634567892, 2, 1, objects5));
 
-        // 场景6：红外相机，多个目标
+
         std::vector<ObjectInfo> objects6 = {
             CreateTestObject(0, 1, 1),
             CreateTestObject(0, 2, 4),
             CreateTestObject(0, 3, 3),
             CreateTestObject(0, 4, 1)};
-        test_packages.push_back(CreateTestDatapackage(1634567900, 1, 0, objects6));
+        test_packages.push_back(CreateTestDatapackage(1634567894, 1, 0, objects6));
+
+        
+        std::vector<ObjectInfo> objects7 = {
+            CreateTestObject(0, 1, 3),
+            CreateTestObject(0, 2, 1)};
+        test_packages.push_back(CreateTestDatapackage(1634567896, 2, 2, objects6));
+
+
+        std::vector<ObjectInfo> objects8 = {
+            CreateTestObject(0, 1, 1),
+            CreateTestObject(0, 2, 4),
+            CreateTestObject(0, 3, 3),
+            CreateTestObject(0, 4, 1)};
+        test_packages.push_back(CreateTestDatapackage(1634567898, 3, 1, objects7));
+
+
+        std::vector<ObjectInfo> objects9 = {
+            CreateTestObject(0, 1, 1),
+            CreateTestObject(0, 2, 4),
+            CreateTestObject(0, 3, 3)};
+        test_packages.push_back(CreateTestDatapackage(1634567900, 1, 0, objects8));
 
         // 输入数据到流水线
         std::cout << "==================== 开始测试流水线 ====================" << std::endl;

@@ -2,8 +2,8 @@
 #include <thread>
 #include <chrono>
 
-Sink::Sink(const std::string &name, size_t maxQueueLength)
-    : Module(name, maxQueueLength) {}
+Sink::Sink(const std::string &name, double time_slice, size_t maxQueueLength)
+    : Module(name, maxQueueLength), timeSlice(time_slice) {}
 
 void Sink::run()
 {
@@ -12,7 +12,7 @@ void Sink::run()
 
         inputLock->lock();
 
-        if (inputQueue->isEmpty())
+        if (inputQueue->isEmpty() || inputQueue->deltaTime() < timeSlice + 1)
         {
             inputLock->unlock();
             std::this_thread::sleep_for(std::chrono::milliseconds(5));

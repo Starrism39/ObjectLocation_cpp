@@ -57,8 +57,8 @@ void Output::UTMToWGS84(const std::vector<double>& utm, double wgs84[3]) {
     wgs84[2] = z;                    // 高度
 }
 
-Output::Output(int max_queue_length)
-    :Sink::Sink("Output", max_queue_length){}
+Output::Output(double time_slice, int max_queue_length)
+    :Sink::Sink("Output", time_slice, max_queue_length){}
 
 std::shared_ptr<DataPackage> Output::process(const std::vector<Package>& packages){
     uint8_t num = 0;

@@ -408,6 +408,7 @@ void printObjectInfo(const std::shared_ptr<DataPackage>& data) {
     }
 
     std::cout << "TimeStamp: " << data->get_timestamp() << std::endl;
+    std::cout << "uav id: " << static_cast<int>(data->get_uav_id()) << std::endl;
     std::cout << "obj nums are " << static_cast<int>(data->get_obj_num()) << std::endl;
 
     std::vector<ObjectInfo> objects = data->get_object_info();
@@ -420,6 +421,7 @@ void printObjectInfo(const std::shared_ptr<DataPackage>& data) {
                   << ", w=" << obj.rect.w 
                   << ", h=" << obj.rect.h << std::endl;
         std::cout << "  Class ID: " << static_cast<int>(obj.label) << std::endl;
+        std::cout << "  Global ID: " << static_cast<int>(obj.uid) << std::endl;
         std::cout << "  Score: " << obj.prob << std::endl;
         std::cout << "  wgs84: " << obj.wgs84[0]
                   << ", "<< obj.wgs84[1]

@@ -72,4 +72,5 @@ pipeline:
     name: "Output"
     parallel: 1
     args:
+      time_slice: *time_slice
       max_queue_length: *max_queue_length
