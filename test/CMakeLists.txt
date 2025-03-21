@@ -6,12 +6,12 @@ add_executable(ConvertpipeTest ${PROJECT_SOURCE_DIR}/test/ConvertpipeTest.cpp ${
 add_executable(FusionTest ${PROJECT_SOURCE_DIR}/test/FusionTest.cpp ${DET_SRC_DIR})
 
 
-target_link_libraries(RaycastTest PRIVATE Threads::Threads ${OpenCV_LIBS})
-target_link_libraries(SpatialTest PRIVATE Threads::Threads ${OpenCV_LIBS})
-target_link_libraries(TimeTest PRIVATE Threads::Threads ${OpenCV_LIBS})
-target_link_libraries(EstiPositionTest PRIVATE Threads::Threads ${OpenCV_LIBS})
-target_link_libraries(ConvertpipeTest PRIVATE Threads::Threads ${OpenCV_LIBS})
-target_link_libraries(FusionTest PRIVATE Threads::Threads ${OpenCV_LIBS})
+target_link_libraries(RaycastTest PRIVATE ${OpenCV_LIBS} Threads::Threads)
+target_link_libraries(SpatialTest PRIVATE ${OpenCV_LIBS} Threads::Threads)
+target_link_libraries(TimeTest PRIVATE ${OpenCV_LIBS} Threads::Threads)
+target_link_libraries(EstiPositionTest PRIVATE ${OpenCV_LIBS} Threads::Threads)
+target_link_libraries(ConvertpipeTest PRIVATE ${OpenCV_LIBS} Threads::Threads)
+target_link_libraries(FusionTest PRIVATE ${OpenCV_LIBS} Threads::Threads)
 
 set_target_properties(RaycastTest PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${EXECUTABLE_OUTPUT_PATH}/test)

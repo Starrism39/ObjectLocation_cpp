@@ -63,12 +63,14 @@ int main() {
 
         // 创建共享队列和互斥锁
         auto inputQueue = std::make_shared<std::vector<std::shared_ptr<DataPackage>>>();
-        auto outputQueue = std::make_shared<TimePriorityQueue>();
         auto inputLock = std::make_shared<std::mutex>();
-        auto outputLock = std::make_shared<std::mutex>();
+        
+
         
         // 创建PackageConverter实例
-        PackageConverter converter("test_converter", inputQueue, outputQueue, inputLock, outputLock);
+        PackageConverter converter("test_converter", inputQueue, inputLock, 1000);
+        auto outputQueue = converter.getOutputQueue();
+        auto outputLock = converter.getOutputLock();
         
         // 启动转换器线程
         converter.run();

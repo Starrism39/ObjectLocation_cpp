@@ -9,17 +9,18 @@
 class PackageConverter {
 public:
     PackageConverter(const std::string& name, 
-        std::shared_ptr<std::vector<std::shared_ptr<DataPackage>>>& input_queue,
-        std::shared_ptr<TimePriorityQueue>& output_queue,
-        std::shared_ptr<std::mutex> inputLock,
-        std::shared_ptr<std::mutex> outputLock);
+        std::shared_ptr<std::vector<std::shared_ptr<DataPackage>>> input_queue,
+        std::shared_ptr<std::mutex> input_lock,
+        int max_queue_length = 0);
     ~PackageConverter();
 
 
     void setInputLock(std::shared_ptr<std::mutex> lock);
     void setOutputLock(std::shared_ptr<std::mutex> lock);
     void setInputQueue(std::shared_ptr<std::vector<std::shared_ptr<DataPackage>>> inputQueue);
-    void setOutputQueue(std::shared_ptr<TimePriorityQueue> outputQueue);
+    void setOutputQueue(std::shared_ptr<TimePriorityQueue<Package>> outputQueue);
+    std::shared_ptr<std::mutex> getOutputLock();
+    std::shared_ptr<TimePriorityQueue<Package>> getOutputQueue();
 
     void run();
     void stop();
@@ -53,7 +54,7 @@ private:
 protected:
     std::string name;
     std::shared_ptr<std::vector<std::shared_ptr<DataPackage>>> inputQueue;
-    std::shared_ptr<TimePriorityQueue> outputQueue;
+    std::shared_ptr<TimePriorityQueue<Package>> outputQueue;
     std::shared_ptr<std::mutex> inputLock;
     std::shared_ptr<std::mutex> outputLock;
     std::atomic<bool> isRunning;

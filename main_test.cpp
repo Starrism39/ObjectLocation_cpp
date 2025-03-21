@@ -11,7 +11,8 @@
 #include "modules/time_filter.h"
 #include "modules/esti_position.h"
 #include "modules/spatial_filter.h"
-#include "modules/output.h"
+#include "modules/fusion.h"
+
 
 // 创建测试用的ObjectInfo
 ObjectInfo CreateTestObject(uint8_t uid, uint16_t tracker_id, uint8_t label,
@@ -160,14 +161,7 @@ Module *createModule(YAML::Node config, const std::string &name, const YAML::Nod
             args["max_queue_length"].IsDefined() ? args["max_queue_length"].as<int>() : 0);
     }
 
-    else if (name == "Output")
-    {
-        return new Output(
-            args["time_slice"].as<double>(),
-            args["max_queue_length"].IsDefined() ? args["max_queue_length"].as<int>() : 0);
-    }
 
-    throw std::runtime_error("Unknown module type: " + name);
 }
 
 int main(int argc, char *argv[])
@@ -189,18 +183,21 @@ int main(int argc, char *argv[])
 
         // 创建数据转换线程
         auto ConInputQueue = std::make_shared<std::vector<std::shared_ptr<DataPackage>>>();
-        auto ConOutputQueue = std::make_shared<TimePriorityQueue>();
         auto ConInputLock = std::make_shared<std::mutex>();
-        auto ConOutputLock = std::make_shared<std::mutex>();
         std::string module_name = config["input"]["stage1"]["name"].as<std::string>();
         YAML::Node args = config["input"]["stage1"]["args"];
-        ConOutputQueue->setMaxCount(args["max_queue_length"].IsDefined() ? args["max_queue_length"].as<int>() : 0);
-        PackageConverter converter(module_name, ConInputQueue, ConOutputQueue, ConInputLock, ConOutputLock);
+        PackageConverter converter(module_name, 
+                                ConInputQueue, 
+                                ConInputLock,
+                                args["max_queue_length"].IsDefined() ? args["max_queue_length"].as<int>() : 0);
+        // 获取输出队列和锁
+        auto ConOutputLock = converter.getOutputLock();
+        auto ConOutputQueue = converter.getOutputQueue();
+
 
         // 创建处理管道（处理）
         // 存储所有管道阶段的模块
         std::vector<std::vector<Module *>> pipelines;
-
         // 遍历pipeline节点
         for (const auto &stage : config["pipeline"])
         {
@@ -220,11 +217,32 @@ int main(int argc, char *argv[])
 
             pipelines.push_back(stage_modules);
         }
+        Pipeline pipeline(pipelines, ConOutputQueue, ConOutputLock);
+        // 获取输出队列和锁
+        auto PipeOutputQueue = pipeline.getOutputQueue();
+        auto PipeOutputLock = pipeline.getOutputLock();
+
+
+        // 创建合包线程
+        module_name = config["output"]["stage1"]["name"].as<std::string>();
+        args = config["output"]["stage1"]["args"];
+        Fusion fusion(module_name, 
+                    args["time_slice"].as<double>(), 
+                    PipeOutputQueue, 
+                    PipeOutputLock, 
+                    args["max_queue_length"].IsDefined() ? args["max_queue_length"].as<int>() : 0);
+        auto FusionOutputQueue = fusion.getOutputQueue();
+        auto FusionOutputLock = fusion.getOutputLock();
+
+        // kalman线程
+
 
         // 启动转换器线程
         converter.run();
         // 创建并运行管道
-        Pipeline pipeline(pipelines, ConOutputQueue, ConOutputLock);
+        pipeline.run();
+        // 启动合包线程
+        fusion.run();
 
         // ======================
         // 测试流水线
@@ -247,58 +265,61 @@ int main(int argc, char *argv[])
         std::vector<ObjectInfo> objects2 = {
             CreateTestObject(0, 1, 3),
             CreateTestObject(0, 2, 3)};
-        test_packages.push_back(CreateTestDatapackage(1634567890, 2, 1, objects2));
+        test_packages.push_back(CreateTestDatapackage(1634567891, 2, 0, objects2));
 
 
         std::vector<ObjectInfo> objects3 = {
             CreateTestObject(0, 1, 1),
             CreateTestObject(0, 2, 4),
-            CreateTestObject(0, 3, 3),
-            CreateTestObject(0, 4, 2)};
-        test_packages.push_back(CreateTestDatapackage(1634567890, 3, 2, objects3));
+            CreateTestObject(0, 3, 3)};
+        test_packages.push_back(CreateTestDatapackage(1634567892, 1, 0, objects3));
 
 
         std::vector<ObjectInfo> objects4 = {
             CreateTestObject(0, 1, 1),
             CreateTestObject(0, 2, 4),
             CreateTestObject(0, 3, 3)};
-        test_packages.push_back(CreateTestDatapackage(1634567892, 3, 2, objects4));
+        test_packages.push_back(CreateTestDatapackage(1634567893, 2, 0, objects4));
 
 
         std::vector<ObjectInfo> objects5 = {
             CreateTestObject(0, 1, 1),
             CreateTestObject(0, 2, 4),
             CreateTestObject(0, 3, 3)};
-        test_packages.push_back(CreateTestDatapackage(1634567892, 2, 1, objects5));
+        test_packages.push_back(CreateTestDatapackage(1634567894, 1, 0, objects5));
 
 
         std::vector<ObjectInfo> objects6 = {
             CreateTestObject(0, 1, 1),
             CreateTestObject(0, 2, 4),
-            CreateTestObject(0, 3, 3),
-            CreateTestObject(0, 4, 1)};
-        test_packages.push_back(CreateTestDatapackage(1634567894, 1, 0, objects6));
+            CreateTestObject(0, 3, 3)};
+        test_packages.push_back(CreateTestDatapackage(1634567895, 2, 0, objects6));
 
         
         std::vector<ObjectInfo> objects7 = {
             CreateTestObject(0, 1, 3),
             CreateTestObject(0, 2, 1)};
-        test_packages.push_back(CreateTestDatapackage(1634567896, 2, 2, objects6));
+        test_packages.push_back(CreateTestDatapackage(1634567896, 1, 0, objects7));
 
 
         std::vector<ObjectInfo> objects8 = {
             CreateTestObject(0, 1, 1),
             CreateTestObject(0, 2, 4),
-            CreateTestObject(0, 3, 3),
-            CreateTestObject(0, 4, 1)};
-        test_packages.push_back(CreateTestDatapackage(1634567898, 3, 1, objects7));
+            CreateTestObject(0, 3, 3)};
+        test_packages.push_back(CreateTestDatapackage(1634567897, 2, 0, objects8));
 
 
         std::vector<ObjectInfo> objects9 = {
             CreateTestObject(0, 1, 1),
+            CreateTestObject(0, 2, 4)};
+        test_packages.push_back(CreateTestDatapackage(1634567898, 1, 0, objects9));
+
+
+        std::vector<ObjectInfo> objects10 = {
+            CreateTestObject(0, 1, 1),
             CreateTestObject(0, 2, 4),
             CreateTestObject(0, 3, 3)};
-        test_packages.push_back(CreateTestDatapackage(1634567900, 1, 0, objects8));
+        test_packages.push_back(CreateTestDatapackage(1634567899, 2, 0, objects10));
 
         // 输入数据到流水线
         std::cout << "==================== 开始测试流水线 ====================" << std::endl;

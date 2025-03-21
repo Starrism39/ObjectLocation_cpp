@@ -76,10 +76,17 @@ include_directories("/usr/include/eigen3")
 find_package(yaml-cpp REQUIRED)
 
 # pthread
+set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
 # opencv
-find_package(OpenCV REQUIRED)
+find_package(OpenCV REQUIRED COMPONENTS
+    core 
+    imgcodecs   
+    imgproc     
+    highgui      
+)
+message(STATUS "OpenCV libraries: ${OpenCV_LIBS}")
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
 include_directories(${PROJECT_SOURCE_DIR}/3rdparty) 
@@ -96,6 +103,6 @@ add_subdirectory(test/)
 
 
 add_executable(main_test main_test.cpp ${DET_SRC_DIR})
-target_link_libraries(main_test PRIVATE Threads::Threads yaml-cpp ${OpenCV_LIBS})
+target_link_libraries(main_test PRIVATE ${OpenCV_LIBS} Threads::Threads yaml-cpp)
 set_target_properties(main_test PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${EXECUTABLE_OUTPUT_PATH}/bin)

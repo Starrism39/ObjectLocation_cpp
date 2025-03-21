@@ -58,112 +58,6 @@ std::string Package::toString() const {
     return "time:" + std::to_string(time);
 }
 
-TimePriorityQueue::TimePriorityQueue(size_t maxCount) 
-    : queue(std::list<Package>()), maxCount(maxCount) {}
-
-bool TimePriorityQueue::isEmpty() const {
-    return queue.empty();
-}
-
-bool TimePriorityQueue::isFull() const {
-    return maxCount > 0 && queue.size() >= maxCount;
-}
-
-int TimePriorityQueue::push(const Package& package) {
-    if (isFull()) {
-        return -1;
-    }
-    
-    // 按时间降序插入（新的时间在前）
-    auto it = queue.begin();
-    while (it != queue.end() && it->time >= package.time) {
-        ++it;
-    }
-    queue.insert(it, package);
-    return 0;
-}
-
-Package TimePriorityQueue::pop() {
-    if (isEmpty()) {
-        throw std::runtime_error("TimePriorityQueue is empty");
-    }
-    Package package = queue.back();
-    queue.pop_back();
-    return package;
-}
-
-Package TimePriorityQueue::peek() {
-    return queue.back();
-}
-
-void TimePriorityQueue::clear() {
-    queue.clear();
-}
-
-std::vector<Package> TimePriorityQueue::getTimeSlice(double timeSlice) {
-    if (isEmpty()) {
-        throw std::runtime_error("TimePriorityQueue is empty");
-    }
-
-    double stopTime = queue.back().time + timeSlice;  // 默认值为最小时间+时间间隔
-    
-    // // 查找分界标志
-    // for (auto it = queue.rbegin(); it != queue.rend(); ++it) {
-    //     if (it->delim_flag) {
-    //         stopTime = it->time;
-    //         break;
-    //     }
-    // }
-
-    // 找到分界点
-    auto splitIt = std::find_if(queue.begin(), queue.end(),
-        [stopTime](const Package& p) { return p.time <= stopTime; });
-
-    // if (splitIt != queue.end()) {
-    //     splitIt->delim_flag = 1;
-    // }
-
-    // 提取时间片段并返回
-    std::vector<Package> timeSliceList(splitIt, queue.end());
-    queue.erase(splitIt, queue.end());
-    return timeSliceList;
-}
-
-double TimePriorityQueue::deltaTime() const {
-    if (queue.size() < 2) {
-        return 0.0;
-    }
-    return queue.front().time - queue.back().time;
-}
-
-void TimePriorityQueue::setMaxCount(size_t maxCount) {
-    this->maxCount = maxCount;
-}
-
-size_t TimePriorityQueue::size() const {
-    return queue.size();
-}
-
-Package& TimePriorityQueue::operator[](size_t index) {
-    auto it = queue.begin();
-    std::advance(it, index);
-    return *it;
-}
-
-const Package& TimePriorityQueue::operator[](size_t index) const {
-    auto it = queue.begin();
-    std::advance(it, index);
-    return *it;
-}
-
-std::string TimePriorityQueue::toString() const {
-    std::ostringstream oss;
-    for (const auto& pkg : queue) {
-        oss << pkg.toString() << " ";
-    }
-    return oss.str();
-}
-
 Module::Module(const std::string& name, size_t maxQueueLength)
     :name(name),
     inputQueue(nullptr),
@@ -184,18 +78,18 @@ void Module::setOutputLock(std::shared_ptr<std::mutex> lock) {
     outputLock = lock;
 }
 
-void Module::setInputQueue(std::shared_ptr<TimePriorityQueue> inputQueue) {
+void Module::setInputQueue(std::shared_ptr<TimePriorityQueue<Package>> inputQueue) {
     this->inputQueue = inputQueue;
 }
 
-void Module::setOutputQueue(std::shared_ptr<TimePriorityQueue> outputQueue) {
+void Module::setOutputQueue(std::shared_ptr<TimePriorityQueue<Package>> outputQueue) {
     this->outputQueue = outputQueue;
     if (maxQueueLength > 0 && outputQueue) {
         outputQueue->setMaxCount(maxQueueLength);
     }
 }
 
-std::shared_ptr<TimePriorityQueue> Module::getOutputQueue(){
+std::shared_ptr<TimePriorityQueue<Package>> Module::getOutputQueue(){
     return this->outputQueue;
 }
 
@@ -212,7 +106,7 @@ std::string Module::toString() const {
 }
 
 
-// 辅助函数：打印Package内容
+// 打印信息
 template <typename T>
 void PrintVector(const std::string &name, const std::vector<T> &vec)
 {
@@ -246,4 +140,57 @@ void PrintPackage(const Package &pkg)
     PrintVector("目标UTM位置", pkg.location);
     auto center = pkg.getCenterPoint();
     std::cout << "目标中心点: [" << center[0] << ", " << center[1] << "]" << std::endl;
+}
+
+std::string type2str(int type) {
+    std::string r;
+    uchar depth = type & CV_MAT_DEPTH_MASK;
+    uchar chans = 1 + (type >> CV_CN_SHIFT);
+    switch (depth) {
+        case CV_8U:  r = "8U"; break;
+        case CV_8S:  r = "8S"; break;
+        case CV_16U: r = "16U"; break;
+        case CV_16S: r = "16S"; break;
+        case CV_32S: r = "32S"; break;
+        case CV_32F: r = "32F"; break;
+        case CV_64F: r = "64F"; break;
+        default:     r = "User"; break;
+    }
+    r += "C";
+    r += (chans + '0');
+    return r;
+}
+
+void printOutPackage(const OutPackage& package) {
+    // 输出时间戳
+    std::cout << "Timestamp: " << package.time << "\n\n";
+
+    std::cout << "Objects (" << package.objs.size() << "):\n";
+    for (size_t i = 0; i < package.objs.size(); ++i) {
+        const Object& obj = package.objs[i];
+        std::cout << "  Object[" << i << "]:\n";
+        std::cout << "    global_id: " << obj.global_id << "\n";
+
+        // 输出位置信息
+        std::cout << "    location: [";
+        for (size_t j = 0; j < obj.location.size(); ++j) {
+            if (j > 0) std::cout << ", ";
+            std::cout << std::fixed << std::setprecision(6) << obj.location[j];
+        }
+        std::cout << "]\n";
+
+        // 输出图像数据
+        std::cout << "    uav_img (" << obj.uav_img.size() << " map entries):\n";
+        for (size_t j = 0; j < obj.uav_img.size(); ++j) {
+            const auto& map_entry = obj.uav_img[j];
+            std::cout << "      Map[" << j << "] (" << map_entry.size() << " elements):\n";
+            for (const auto& [key, mat] : map_entry) {
+                std::cout << "        Key: " << key << "\n";
+                std::cout << "        Mat: " << mat.cols << "x" << mat.rows
+                          << "  Type: " << type2str(mat.type()) 
+                          << "  Channels: " << mat.channels() << "\n";
+            }
+        }
+        std::cout << "\n";
+    }
 }

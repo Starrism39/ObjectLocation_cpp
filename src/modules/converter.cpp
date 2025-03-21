@@ -2,17 +2,20 @@
 #include <stdexcept>
 #include <cmath>
 
-PackageConverter::PackageConverter(const std::string& name, std::shared_ptr<std::vector<std::shared_ptr<DataPackage>>>& input_queue,
-                                std::shared_ptr<TimePriorityQueue>& output_queue,
+PackageConverter::PackageConverter(const std::string& name, 
+                                std::shared_ptr<std::vector<std::shared_ptr<DataPackage>>> input_queue,
                                 std::shared_ptr<std::mutex> input_lock,
-                                std::shared_ptr<std::mutex> output_lock):
-    name(name)
+                                int max_queue_length):
+    name(name),
+    inputQueue(std::move(input_queue)),
+    inputLock(std::move(input_lock))
 {
     std::cout << "Building " << name << std::endl;
-    setInputLock(input_lock);
-    setOutputLock(output_lock);
-    setInputQueue(input_queue);
-    setOutputQueue(output_queue);
+    this->outputLock = std::make_shared<std::mutex>();
+    this->outputQueue = std::make_shared<TimePriorityQueue<Package>>();
+    if (max_queue_length > 0 && outputQueue) {
+        this->outputQueue->setMaxCount(max_queue_length);
+    }
 }
 
 PackageConverter::~PackageConverter() {
@@ -25,7 +28,11 @@ void PackageConverter::setOutputLock(std::shared_ptr<std::mutex> lock){this->out
 
 void PackageConverter::setInputQueue(std::shared_ptr<std::vector<std::shared_ptr<DataPackage>>> inputQueue){this->inputQueue = inputQueue;}
 
-void PackageConverter::setOutputQueue(std::shared_ptr<TimePriorityQueue> outputQueue){this->outputQueue = outputQueue;}
+void PackageConverter::setOutputQueue(std::shared_ptr<TimePriorityQueue<Package>> outputQueue){this->outputQueue = outputQueue;}
+
+std::shared_ptr<std::mutex> PackageConverter::getOutputLock(){return this->outputLock;}
+
+std::shared_ptr<TimePriorityQueue<Package>> PackageConverter::getOutputQueue(){return this->outputQueue;}
 
 std::vector<double> PackageConverter::GetCameraIntrinsics(int camera_type) {
     switch (camera_type) {
@@ -150,7 +157,6 @@ std::vector<Package> PackageConverter::ConvertToPackages(const std::shared_ptr<D
     for (const auto& obj : objects) {
         packages.push_back(ConvertSingleObject(data_pkg, obj));
     }
-    data_pkg->clear_object_info();
     
     return packages;
 }

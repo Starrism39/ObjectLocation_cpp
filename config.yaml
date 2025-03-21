@@ -2,7 +2,7 @@
 global:
   map_path: &map_path "/home/xjy/code/location_Map/test_1/data/mesh_triangles.npy" #可更换地图
  # multi_map_path: &multi_map_path "data/map/yumen/Tile_geo.pkl" #暂未实现
-  time_slice: &time_slice 0 # 时间线融合, 可以调整, 单位ms
+  time_slice: &time_slice 1 # 时间线融合, 可以调整, 单位ms
   enable_reloaction: &enable_reloaction False
   order: &order "rzyx" # 固定参数
   max_queue_length: &max_queue_length 1000
@@ -17,13 +17,13 @@ input:
 
 pipeline:
 
-  stage1:
-    idx: 1
-    parallel: 1
-    name: "TimeFilter"
-    args:
-      time_slice: *time_slice
-      max_queue_length: *max_queue_length
+  # stage1:
+  #   idx: 1
+  #   parallel: 1
+  #   name: "TimeFilter"
+  #   args:
+  #     time_slice: *time_slice
+  #     max_queue_length: *max_queue_length
 
   # stage2:
   #   idx: 2
@@ -44,9 +44,9 @@ pipeline:
   #     overlap_y_scale : 0.1 # 切分的y重叠率
 
 
-  stage2:
-    idx: 2
-    parallel: 4  # 并行数，不建议太大
+  stage1:
+    idx: 1
+    parallel: 2  # 并行数，不建议太大
     name: "EstiPosition"
     args:
       is_multi_map : False
@@ -57,8 +57,8 @@ pipeline:
       max_queue_length: *max_queue_length
 
 
-  stage3:
-    idx: 3
+  stage2:
+    idx: 2
     name: "SpatialFilter"
     parallel: 1
     args:
@@ -67,10 +67,11 @@ pipeline:
       max_map: 100
       max_queue_length: *max_queue_length
 
-  stage4:
-    idx: 4
-    name: "Output"
-    parallel: 1
+output:
+
+  stage1:
+    idx: 1
+    name: "Fusion"
     args:
       time_slice: *time_slice
       max_queue_length: *max_queue_length
