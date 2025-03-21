@@ -117,11 +117,11 @@ void DataPackage::encoder_stream()
 
     // 2. 初始化空间
     this->stream_len_ = 8 + 1 + 36 + 48 + 1 + this->obj_num_ * 7 + 2; //  信息体 : 时间8B +
-                                                                    //  相机信息1B(无人机ID 4bit+相机类型2bit+帧类型2bit)
-                                                                    //  H矩阵36B+相机绝对位姿48B
-                                                                    //  目标数量1B
-                                                                    //  目标信息 7*目标数量B
-                                                                    //  背景大小2B
+                                                                      //  相机信息1B(无人机ID 4bit+相机类型2bit+帧类型2bit)
+                                                                      //  H矩阵36B+相机绝对位姿48B
+                                                                      //  目标数量1B
+                                                                      //  目标信息 7*目标数量B
+                                                                      //  背景大小2B
     //  this->stream_len_ += encoder_background_len;
     //  this->stream_len_ += encoder_foreground_len;
     this->stream_ = std::make_unique<uint8_t[]>(this->stream_len_);
@@ -393,16 +393,19 @@ void DataPackage::unpack_objinfo(const uint8_t *data, ObjectInfo &obj)
     obj.rect = this->unalign_bbox(aligned_rect);
 }
 
-void printObjectInfo(const std::shared_ptr<DataPackage>& data) {
-    if (!data) {
+void printObjectInfo(const std::shared_ptr<DataPackage> &data)
+{
+    if (!data)
+    {
         std::cout << "DataPackage is null" << std::endl;
         return;
     }
 
     uint8_t obj_num = data->get_obj_num();
     std::cout << "Total objects: " << static_cast<int>(obj_num) << std::endl;
-    
-    if (obj_num == 0) {
+
+    if (obj_num == 0)
+    {
         std::cout << "No objects detected." << std::endl;
         return;
     }
@@ -412,20 +415,21 @@ void printObjectInfo(const std::shared_ptr<DataPackage>& data) {
     std::cout << "obj nums are " << static_cast<int>(data->get_obj_num()) << std::endl;
 
     std::vector<ObjectInfo> objects = data->get_object_info();
-    
-    for (size_t i = 0; i < objects.size(); ++i) {
-        const auto& obj = objects[i];
+
+    for (size_t i = 0; i < objects.size(); ++i)
+    {
+        const auto &obj = objects[i];
         std::cout << "Object " << i + 1 << ":" << std::endl;
-        std::cout << "  Bbox: x=" << obj.rect.x 
+        std::cout << "  Bbox: x=" << obj.rect.x
                   << ", y=" << obj.rect.y
-                  << ", w=" << obj.rect.w 
+                  << ", w=" << obj.rect.w
                   << ", h=" << obj.rect.h << std::endl;
         std::cout << "  Class ID: " << static_cast<int>(obj.label) << std::endl;
         std::cout << "  Global ID: " << static_cast<int>(obj.uid) << std::endl;
         std::cout << "  Score: " << obj.prob << std::endl;
         std::cout << "  wgs84: " << obj.wgs84[0]
-                  << ", "<< obj.wgs84[1]
-                  << ", "<< obj.wgs84[2] << std::endl;
+                  << ", " << obj.wgs84[1]
+                  << ", " << obj.wgs84[2] << std::endl;
         std::cout << std::endl;
     }
 }

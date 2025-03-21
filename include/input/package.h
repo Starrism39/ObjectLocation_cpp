@@ -43,10 +43,10 @@ struct ObjectInfo
 {
     /* data */
     uint8_t uid;
-    uint16_t tracker_id;  // 填入tracker_id
-    Bbox rect;  // 填入Bbox
+    uint16_t tracker_id; // 填入tracker_id
+    Bbox rect;           // 填入Bbox
     float prob;
-    uint8_t label;  // 填入class_id
+    uint8_t label;   // 填入class_id
     double wgs84[3]; // 经纬度；填入location
 };
 
@@ -61,7 +61,7 @@ typedef union
         double yaw;
         double pitch;
         double roll;
-    } member;  // 填入camera_pose
+    } member; // 填入camera_pose
     uint8_t data[48];
 } CameraMatrix;
 
@@ -93,14 +93,14 @@ public:
     void set_camera_info(const uint8_t uav_id, const uint8_t camera_type, const double *cm); // 设置相机信息
 
     // 目标检测
-    void clear_object_info();   // 清空目标
+    void clear_object_info();                     // 清空目标
     void set_obj_num(uint8_t obj_num);            // 设置目标数量
     void push_object_info(const ObjectInfo &obj); // 添加目标信息
     // xfeat
     void set_homography(const float *h); // 设置单应矩阵
 
     // encoder
-    void set_imgcode(const uint8_t *img_code, const size_t len);       // 设置图像码流
+    void set_imgcode(const uint8_t *img_code, const size_t len);      // 设置图像码流
     void set_foreground(const uint8_t *foreground, const size_t len); // 设置前景流(bbox&bbox[i-1])
     void set_background(const uint8_t *background, const size_t len); // 设置背景流
     void set_keyframe(bool key_frame);                                // 设置关键帧
@@ -173,4 +173,4 @@ private:
     void unpack_objinfo(const uint8_t *data, ObjectInfo &obj);
 };
 
-void printObjectInfo(const std::shared_ptr<DataPackage>& data);
+void printObjectInfo(const std::shared_ptr<DataPackage> &data);

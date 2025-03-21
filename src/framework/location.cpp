@@ -41,7 +41,8 @@ void Location::run()
         outputLock->lock();
         // // 打印每个包的信息
         // PrintPackage(package);
-        if(!package.location.empty()){
+        if (!package.location.empty())
+        {
             outputQueue->push(package);
         }
         outputLock->unlock();

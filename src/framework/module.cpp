@@ -4,107 +4,122 @@
 #include <algorithm>
 #include <sstream>
 
-
 // Package实现
-Package::Package(time_t time) : 
-    time(time),
-    camera_id(-1),
-    prob(0.0),
-    class_id(-1),
-    tracker_id(-1),
-    uid(-1),
-    delim_flag(0),
-    global_id(-1),
-    local_id(-1),
-    bbox_type("xywh") {}
+Package::Package(time_t time) : time(time),
+                                camera_id(-1),
+                                prob(0.0),
+                                class_id(-1),
+                                tracker_id(-1),
+                                uid(-1),
+                                delim_flag(0),
+                                global_id(-1),
+                                local_id(-1),
+                                bbox_type("xywh") {}
 
-
-std::vector<double> Package::getCenterPoint() const {
-    if (Bbox.size() < 4) {
+std::vector<double> Package::getCenterPoint() const
+{
+    if (Bbox.size() < 4)
+    {
         throw std::runtime_error("Bbox未正确初始化");
     }
 
     std::vector<double> center(2);
-    if (bbox_type == "cxcywh") {
+    if (bbox_type == "cxcywh")
+    {
         center[0] = static_cast<double>(Bbox[0]);
-        center[1] = static_cast<double>(Bbox[1] + Bbox[3]/2.0);
+        center[1] = static_cast<double>(Bbox[1] + Bbox[3] / 2.0);
     }
-    else if (bbox_type == "xyxy") {
-        center[0] = static_cast<double>((Bbox[0] + Bbox[2])/2.0);
-        center[1] = static_cast<double>((Bbox[1] + Bbox[3])/2.0);
+    else if (bbox_type == "xyxy")
+    {
+        center[0] = static_cast<double>((Bbox[0] + Bbox[2]) / 2.0);
+        center[1] = static_cast<double>((Bbox[1] + Bbox[3]) / 2.0);
     }
-    else if (bbox_type == "xywh") {
-        center[0] = static_cast<double>(Bbox[0] + Bbox[2]/2.0);
-        center[1] = static_cast<double>(Bbox[1] + Bbox[3]/2.0);
+    else if (bbox_type == "xywh")
+    {
+        center[0] = static_cast<double>(Bbox[0] + Bbox[2] / 2.0);
+        center[1] = static_cast<double>(Bbox[1] + Bbox[3] / 2.0);
     }
-    else {
+    else
+    {
         throw std::runtime_error("bbox_type必须是 cxcywh、xyxy 或 xywh");
     }
     return center;
 }
 
-Package Package::copy() const {
-    return Package(*this);  // 返回对象的副本
+Package Package::copy() const
+{
+    return Package(*this); // 返回对象的副本
 }
 
-void Package::setBboxType(const std::string& type) {
-    if (type != "cxcywh" && type != "xyxy" && type != "xywh") {
+void Package::setBboxType(const std::string &type)
+{
+    if (type != "cxcywh" && type != "xyxy" && type != "xywh")
+    {
         throw std::runtime_error("bbox_type必须是 cxcywh、xyxy 或 xywh");
     }
     bbox_type = type;
 }
 
-std::string Package::toString() const {
+std::string Package::toString() const
+{
     return "time:" + std::to_string(time);
 }
 
-Module::Module(const std::string& name, size_t maxQueueLength)
-    :name(name),
-    inputQueue(nullptr),
-    outputQueue(nullptr),
-    inputLock(nullptr),
-    outputLock(nullptr),
-    maxQueueLength(maxQueueLength),
-    isRunning(true)
+Module::Module(const std::string &name, size_t maxQueueLength)
+    : name(name),
+      inputQueue(nullptr),
+      outputQueue(nullptr),
+      inputLock(nullptr),
+      outputLock(nullptr),
+      maxQueueLength(maxQueueLength),
+      isRunning(true)
 {
     std::cout << "Building " << name << std::endl;
 }
 
-void Module::setInputLock(std::shared_ptr<std::mutex> lock) {
+void Module::setInputLock(std::shared_ptr<std::mutex> lock)
+{
     inputLock = lock;
 }
 
-void Module::setOutputLock(std::shared_ptr<std::mutex> lock) {
+void Module::setOutputLock(std::shared_ptr<std::mutex> lock)
+{
     outputLock = lock;
 }
 
-void Module::setInputQueue(std::shared_ptr<TimePriorityQueue<Package>> inputQueue) {
+void Module::setInputQueue(std::shared_ptr<TimePriorityQueue<Package>> inputQueue)
+{
     this->inputQueue = inputQueue;
 }
 
-void Module::setOutputQueue(std::shared_ptr<TimePriorityQueue<Package>> outputQueue) {
+void Module::setOutputQueue(std::shared_ptr<TimePriorityQueue<Package>> outputQueue)
+{
     this->outputQueue = outputQueue;
-    if (maxQueueLength > 0 && outputQueue) {
+    if (maxQueueLength > 0 && outputQueue)
+    {
         outputQueue->setMaxCount(maxQueueLength);
     }
 }
 
-std::shared_ptr<TimePriorityQueue<Package>> Module::getOutputQueue(){
+std::shared_ptr<TimePriorityQueue<Package>> Module::getOutputQueue()
+{
     return this->outputQueue;
 }
 
-std::shared_ptr<std::mutex> Module::getOutputLock(){
+std::shared_ptr<std::mutex> Module::getOutputLock()
+{
     return this->outputLock;
 }
 
-void Module::close() {
+void Module::close()
+{
     isRunning = false;
 }
 
-std::string Module::toString() const {
+std::string Module::toString() const
+{
     return name;
 }
-
 
 // 打印信息
 template <typename T>
@@ -142,52 +157,76 @@ void PrintPackage(const Package &pkg)
     std::cout << "目标中心点: [" << center[0] << ", " << center[1] << "]" << std::endl;
 }
 
-std::string type2str(int type) {
+std::string type2str(int type)
+{
     std::string r;
     uchar depth = type & CV_MAT_DEPTH_MASK;
     uchar chans = 1 + (type >> CV_CN_SHIFT);
-    switch (depth) {
-        case CV_8U:  r = "8U"; break;
-        case CV_8S:  r = "8S"; break;
-        case CV_16U: r = "16U"; break;
-        case CV_16S: r = "16S"; break;
-        case CV_32S: r = "32S"; break;
-        case CV_32F: r = "32F"; break;
-        case CV_64F: r = "64F"; break;
-        default:     r = "User"; break;
+    switch (depth)
+    {
+    case CV_8U:
+        r = "8U";
+        break;
+    case CV_8S:
+        r = "8S";
+        break;
+    case CV_16U:
+        r = "16U";
+        break;
+    case CV_16S:
+        r = "16S";
+        break;
+    case CV_32S:
+        r = "32S";
+        break;
+    case CV_32F:
+        r = "32F";
+        break;
+    case CV_64F:
+        r = "64F";
+        break;
+    default:
+        r = "User";
+        break;
     }
     r += "C";
     r += (chans + '0');
     return r;
 }
 
-void printOutPackage(const OutPackage& package) {
+void printOutPackage(const OutPackage &package)
+{
     // 输出时间戳
     std::cout << "Timestamp: " << package.time << "\n\n";
 
     std::cout << "Objects (" << package.objs.size() << "):\n";
-    for (size_t i = 0; i < package.objs.size(); ++i) {
-        const Object& obj = package.objs[i];
+    for (size_t i = 0; i < package.objs.size(); ++i)
+    {
+        const Object &obj = package.objs[i];
         std::cout << "  Object[" << i << "]:\n";
         std::cout << "    global_id: " << obj.global_id << "\n";
 
         // 输出位置信息
         std::cout << "    location: [";
-        for (size_t j = 0; j < obj.location.size(); ++j) {
-            if (j > 0) std::cout << ", ";
+        for (size_t j = 0; j < obj.location.size(); ++j)
+        {
+            if (j > 0)
+                std::cout << ", ";
             std::cout << std::fixed << std::setprecision(6) << obj.location[j];
         }
         std::cout << "]\n";
 
         // 输出图像数据
         std::cout << "    uav_img (" << obj.uav_img.size() << " map entries):\n";
-        for (size_t j = 0; j < obj.uav_img.size(); ++j) {
-            const auto& map_entry = obj.uav_img[j];
+        for (size_t j = 0; j < obj.uav_img.size(); ++j)
+        {
+            const auto &map_entry = obj.uav_img[j];
             std::cout << "      Map[" << j << "] (" << map_entry.size() << " elements):\n";
-            for (const auto& [key, mat] : map_entry) {
+            for (const auto &[key, mat] : map_entry)
+            {
                 std::cout << "        Key: " << key << "\n";
                 std::cout << "        Mat: " << mat.cols << "x" << mat.rows
-                          << "  Type: " << type2str(mat.type()) 
+                          << "  Type: " << type2str(mat.type())
                           << "  Channels: " << mat.channels() << "\n";
             }
         }

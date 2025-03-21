@@ -8,11 +8,13 @@
 
 // TODO：输入、输出
 #include "modules/converter.h"
+
 #include "modules/time_filter.h"
 #include "modules/esti_position.h"
 #include "modules/spatial_filter.h"
-#include "modules/fusion.h"
 
+#include "modules/fusion.h"
+#include "modules/kalman.h"
 
 // 创建测试用的ObjectInfo
 ObjectInfo CreateTestObject(uint8_t uid, uint16_t tracker_id, uint8_t label,
@@ -85,6 +87,71 @@ std::shared_ptr<DataPackage> CreateTestDatapackage(uint64_t timestamp, uint8_t u
     }
 
     return data_pkg;
+}
+
+std::vector<std::shared_ptr<DataPackage>> generate_test_data()
+{
+    std::vector<std::shared_ptr<DataPackage>> test_packages;
+
+    // 完全保持原始数据生成逻辑
+    std::vector<ObjectInfo> objects1 = {
+        CreateTestObject(0, 1, 1),
+        CreateTestObject(0, 2, 2),
+        CreateTestObject(0, 3, 1)};
+    test_packages.push_back(CreateTestDatapackage(1634567890, 1, 0, objects1));
+
+    std::vector<ObjectInfo> objects2 = {
+        CreateTestObject(0, 1, 3),
+        CreateTestObject(0, 2, 3)};
+    test_packages.push_back(CreateTestDatapackage(1634567891, 2, 0, objects2));
+
+    std::vector<ObjectInfo> objects3 = {
+        CreateTestObject(0, 1, 1),
+        CreateTestObject(0, 2, 4),
+        CreateTestObject(0, 3, 3)};
+    test_packages.push_back(CreateTestDatapackage(1634567892, 1, 0, objects3));
+
+    std::vector<ObjectInfo> objects4 = {
+        CreateTestObject(0, 1, 1),
+        CreateTestObject(0, 2, 4),
+        CreateTestObject(0, 3, 3)};
+    test_packages.push_back(CreateTestDatapackage(1634567893, 2, 0, objects4));
+
+    std::vector<ObjectInfo> objects5 = {
+        CreateTestObject(0, 1, 1),
+        CreateTestObject(0, 2, 4),
+        CreateTestObject(0, 3, 3)};
+    test_packages.push_back(CreateTestDatapackage(1634567894, 1, 0, objects5));
+
+    std::vector<ObjectInfo> objects6 = {
+        CreateTestObject(0, 1, 1),
+        CreateTestObject(0, 2, 4),
+        CreateTestObject(0, 3, 3)};
+    test_packages.push_back(CreateTestDatapackage(1634567895, 2, 0, objects6));
+
+    std::vector<ObjectInfo> objects7 = {
+        CreateTestObject(0, 1, 3),
+        CreateTestObject(0, 2, 1)};
+    test_packages.push_back(CreateTestDatapackage(1634567896, 1, 0, objects7));
+
+    std::vector<ObjectInfo> objects8 = {
+        CreateTestObject(0, 1, 1),
+        CreateTestObject(0, 2, 4),
+        CreateTestObject(0, 3, 3)};
+    test_packages.push_back(CreateTestDatapackage(1634567897, 2, 0, objects8));
+
+    std::vector<ObjectInfo> objects9 = {
+        CreateTestObject(0, 1, 1),
+        CreateTestObject(0, 2, 4)};
+    test_packages.push_back(CreateTestDatapackage(1634567898, 1, 0, objects9));
+
+    std::vector<ObjectInfo> objects10 = {
+        CreateTestObject(0, 1, 1),
+        CreateTestObject(0, 2, 4),
+        CreateTestObject(0, 3, 3)};
+    test_packages.push_back(CreateTestDatapackage(1634567899, 2, 0, objects10));
+
+    return test_packages;
 }
 
 // 工厂函数，根据配置创建模块实例
@@ -161,195 +228,126 @@ Module *createModule(YAML::Node config, const std::string &name, const YAML::Nod
             args["max_queue_length"].IsDefined() ? args["max_queue_length"].as<int>() : 0);
     }
 
+    std::cerr << "Error: Unknown module type " << std::endl;
+    return nullptr;
+}
 
+void setup_processing_pipeline(
+    const YAML::Node &config,
+    std::shared_ptr<PackageConverter> &converter,
+    std::shared_ptr<Pipeline> &pipeline,
+    std::shared_ptr<Fusion> &fusion,
+    std::shared_ptr<Kalman> &kalman,
+    std::shared_ptr<std::vector<std::shared_ptr<DataPackage>>> input_queue, // 新增输入队列
+    std::shared_ptr<std::mutex> input_lock)
+{
+    // 初始化数据转换模块
+    const auto &input_config = config["input"]["stage1"];
+    converter = std::make_shared<PackageConverter>(
+        input_config["name"].as<std::string>(),
+        input_queue,
+        input_lock,
+        input_config["args"]["max_queue_length"].as<int>());
+
+    // 初始化处理管道
+    std::vector<std::vector<Module *>> pipeline_modules;
+    for (const auto &stage : config["pipeline"])
+    {
+        const auto &node = stage.second;
+        std::vector<Module *> modules;
+        for (int i = 0; i < node["parallel"].as<int>(); ++i)
+        {
+            modules.push_back(createModule(config, node["name"].as<std::string>(), node["args"]));
+        }
+        pipeline_modules.emplace_back(modules);
+    }
+    pipeline = std::make_shared<Pipeline>(
+        pipeline_modules,
+        converter->getOutputQueue(),
+        converter->getOutputLock());
+
+    // 初始化融合模块
+    const auto &fusion_config = config["output"]["stage1"];
+    fusion = std::make_shared<Fusion>(
+        fusion_config["name"].as<std::string>(),
+        fusion_config["args"]["time_slice"].as<double>(),
+        pipeline->getOutputQueue(),
+        pipeline->getOutputLock(),
+        fusion_config["args"]["max_queue_length"].as<int>());
+
+    // 初始化卡尔曼滤波模块
+    const auto &kalman_config = config["output"]["stage2"];
+    kalman = std::make_shared<Kalman>(
+        kalman_config["name"].as<std::string>(),
+        kalman_config["args"]["time_slice"].as<double>(),
+        fusion->getOutputQueue(),
+        fusion->getOutputLock(),
+        kalman_config["args"]["sigma_a"].as<double>(),
+        kalman_config["args"]["max_queue_length"].as<int>());
+
+    // 启动所有处理线程
+    converter->run();
+    pipeline->run();
+    fusion->run();
+    kalman->run();
 }
 
 int main(int argc, char *argv[])
 {
-    // 设置默认配置文件路径
-    std::string config_path = "config.yaml";
-
-    // 如果提供了命令行参数，使用指定的配置文件
-    if (argc > 1)
-    {
-        config_path = argv[1];
-    }
-
     try
     {
+        // 配置初始化
+        const std::string config_path = (argc > 1) ? argv[1] : "config.yaml";
+        const YAML::Node config = YAML::LoadFile(config_path);
 
-        // 读取YAML配置文件
-        YAML::Node config = YAML::LoadFile(config_path);
+        // 创建外部输入队列和锁
+        auto input_queue = std::make_shared<std::vector<std::shared_ptr<DataPackage>>>();
+        auto input_lock = std::make_shared<std::mutex>();
 
-        // 创建数据转换线程
-        auto ConInputQueue = std::make_shared<std::vector<std::shared_ptr<DataPackage>>>();
-        auto ConInputLock = std::make_shared<std::mutex>();
-        std::string module_name = config["input"]["stage1"]["name"].as<std::string>();
-        YAML::Node args = config["input"]["stage1"]["args"];
-        PackageConverter converter(module_name, 
-                                ConInputQueue, 
-                                ConInputLock,
-                                args["max_queue_length"].IsDefined() ? args["max_queue_length"].as<int>() : 0);
-        // 获取输出队列和锁
-        auto ConOutputLock = converter.getOutputLock();
-        auto ConOutputQueue = converter.getOutputQueue();
-
-
-        // 创建处理管道（处理）
-        // 存储所有管道阶段的模块
-        std::vector<std::vector<Module *>> pipelines;
-        // 遍历pipeline节点
-        for (const auto &stage : config["pipeline"])
-        {
-            std::vector<Module *> stage_modules;
-
-            // 获取模块名称和参数
-            module_name = stage.second["name"].as<std::string>();
-            YAML::Node args = stage.second["args"];
-            int parallel = stage.second["parallel"].as<int>();
-
-            // 创建指定数量的并行模块
-            for (int i = 0; i < parallel; ++i)
-            {
-                Module *module = createModule(config, module_name, args);
-                stage_modules.push_back(module);
-            }
-
-            pipelines.push_back(stage_modules);
-        }
-        Pipeline pipeline(pipelines, ConOutputQueue, ConOutputLock);
-        // 获取输出队列和锁
-        auto PipeOutputQueue = pipeline.getOutputQueue();
-        auto PipeOutputLock = pipeline.getOutputLock();
-
-
-        // 创建合包线程
-        module_name = config["output"]["stage1"]["name"].as<std::string>();
-        args = config["output"]["stage1"]["args"];
-        Fusion fusion(module_name, 
-                    args["time_slice"].as<double>(), 
-                    PipeOutputQueue, 
-                    PipeOutputLock, 
-                    args["max_queue_length"].IsDefined() ? args["max_queue_length"].as<int>() : 0);
-        auto FusionOutputQueue = fusion.getOutputQueue();
-        auto FusionOutputLock = fusion.getOutputLock();
-
-        // kalman线程
-
-
-        // 启动转换器线程
-        converter.run();
-        // 创建并运行管道
-        pipeline.run();
-        // 启动合包线程
-        fusion.run();
-
-        // ======================
-        // 测试流水线
-        // ======================
+        // 初始化处理模块
+        std::shared_ptr<PackageConverter> converter;
+        std::shared_ptr<Pipeline> pipeline;
+        std::shared_ptr<Fusion> fusion;
+        std::shared_ptr<Kalman> kalman;
+        setup_processing_pipeline(config, converter, pipeline, fusion, kalman, input_queue, input_lock);
 
         // 生成测试数据
-        srand(time(nullptr));
+        auto test_packages = generate_test_data();
 
-        // 创建测试数据包
-        std::vector<std::shared_ptr<DataPackage>> test_packages;
-
-
-        std::vector<ObjectInfo> objects1 = {
-            CreateTestObject(0, 1, 1),
-            CreateTestObject(0, 2, 2),
-            CreateTestObject(0, 3, 1)};
-        test_packages.push_back(CreateTestDatapackage(1634567890, 1, 0, objects1));
-
-
-        std::vector<ObjectInfo> objects2 = {
-            CreateTestObject(0, 1, 3),
-            CreateTestObject(0, 2, 3)};
-        test_packages.push_back(CreateTestDatapackage(1634567891, 2, 0, objects2));
-
-
-        std::vector<ObjectInfo> objects3 = {
-            CreateTestObject(0, 1, 1),
-            CreateTestObject(0, 2, 4),
-            CreateTestObject(0, 3, 3)};
-        test_packages.push_back(CreateTestDatapackage(1634567892, 1, 0, objects3));
-
-
-        std::vector<ObjectInfo> objects4 = {
-            CreateTestObject(0, 1, 1),
-            CreateTestObject(0, 2, 4),
-            CreateTestObject(0, 3, 3)};
-        test_packages.push_back(CreateTestDatapackage(1634567893, 2, 0, objects4));
-
-
-        std::vector<ObjectInfo> objects5 = {
-            CreateTestObject(0, 1, 1),
-            CreateTestObject(0, 2, 4),
-            CreateTestObject(0, 3, 3)};
-        test_packages.push_back(CreateTestDatapackage(1634567894, 1, 0, objects5));
-
-
-        std::vector<ObjectInfo> objects6 = {
-            CreateTestObject(0, 1, 1),
-            CreateTestObject(0, 2, 4),
-            CreateTestObject(0, 3, 3)};
-        test_packages.push_back(CreateTestDatapackage(1634567895, 2, 0, objects6));
-
-        
-        std::vector<ObjectInfo> objects7 = {
-            CreateTestObject(0, 1, 3),
-            CreateTestObject(0, 2, 1)};
-        test_packages.push_back(CreateTestDatapackage(1634567896, 1, 0, objects7));
-
-
-        std::vector<ObjectInfo> objects8 = {
-            CreateTestObject(0, 1, 1),
-            CreateTestObject(0, 2, 4),
-            CreateTestObject(0, 3, 3)};
-        test_packages.push_back(CreateTestDatapackage(1634567897, 2, 0, objects8));
-
-
-        std::vector<ObjectInfo> objects9 = {
-            CreateTestObject(0, 1, 1),
-            CreateTestObject(0, 2, 4)};
-        test_packages.push_back(CreateTestDatapackage(1634567898, 1, 0, objects9));
-
-
-        std::vector<ObjectInfo> objects10 = {
-            CreateTestObject(0, 1, 1),
-            CreateTestObject(0, 2, 4),
-            CreateTestObject(0, 3, 3)};
-        test_packages.push_back(CreateTestDatapackage(1634567899, 2, 0, objects10));
-
-        // 输入数据到流水线
-        std::cout << "==================== 开始测试流水线 ====================" << std::endl;
+        // 输入测试数据
+        std::cout << "==================== 启动流水线测试 ====================\n";
         for (const auto &data_pkg : test_packages)
         {
-            // 添加数据到输入队列
             {
-                std::lock_guard<std::mutex> guard(*ConInputLock);
-                ConInputQueue->push_back(data_pkg);
-                std::cout << "添加数据包到输入队列，时间戳: " << data_pkg->get_timestamp()
-                          << "，相机类型: " << (data_pkg->get_camera_type() == 0 ? "电视" : data_pkg->get_camera_type() == 1 ? "红外"
-                                                                                                                             : "微光")
-                          << "，目标数量: " << static_cast<int>(data_pkg->get_obj_num()) << std::endl;
+                std::lock_guard<std::mutex> guard(*input_lock);
+                input_queue->push_back(data_pkg);
             }
-        }
-        std::cout << "添加后队列大小: " << ConInputQueue->size() << std::endl;
 
-        converter.join();
-        pipeline.join();
+            std::cout << "添加数据包到输入队列，时间戳: " << data_pkg->get_timestamp()
+                      << "，相机类型: " << (data_pkg->get_camera_type() == 0 ? "电视" : data_pkg->get_camera_type() == 1 ? "红外"
+                                                                                                                         : "微光")
+                      << "，目标数量: " << static_cast<int>(data_pkg->get_obj_num()) << std::endl;
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        }
+
+        // 等待处理完成
+        converter->join();
+        pipeline->join();
+        fusion->join();
+        kalman->join();
+
+        std::cout << "==================== 流水线测试完成 ====================\n";
     }
     catch (const YAML::Exception &e)
     {
-        std::cerr << "Error parsing YAML file: " << e.what() << std::endl;
+        std::cerr << "配置文件错误: " << e.what() << std::endl;
         return 1;
     }
     catch (const std::exception &e)
     {
-        std::cerr << "Error: " << e.what() << std::endl;
-        return 1;
+        std::cerr << "系统异常: " << e.what() << std::endl;
+        return 2;
     }
-
     return 0;
 }

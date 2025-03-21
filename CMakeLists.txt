@@ -84,7 +84,8 @@ find_package(OpenCV REQUIRED COMPONENTS
     core 
     imgcodecs   
     imgproc     
-    highgui      
+    highgui   
+    video   
 )
 message(STATUS "OpenCV libraries: ${OpenCV_LIBS}")
 

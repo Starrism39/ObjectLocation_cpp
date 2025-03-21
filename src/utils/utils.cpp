@@ -1,10 +1,12 @@
-#include"utils/utils.h"
+#include "utils/utils.h"
 #include <cmath>
 
-CameraPose setCameraPose(const std::vector<double>& camera_pose, const std::string& order) {
+CameraPose setCameraPose(const std::vector<double> &camera_pose, const std::string &order)
+{
     // 参数检查
-    if (camera_pose.size() != 6) {
-    throw std::invalid_argument("相机姿态参数必须包含6个值");
+    if (camera_pose.size() != 6)
+    {
+        throw std::invalid_argument("相机姿态参数必须包含6个值");
     }
 
     // 构建平移向量
@@ -19,35 +21,38 @@ CameraPose setCameraPose(const std::vector<double>& camera_pose, const std::stri
     return {R, t, R_inv};
 }
 
-std::vector<double> setDistortionCoeffs(const std::vector<double>& distortion_param) {
+std::vector<double> setDistortionCoeffs(const std::vector<double> &distortion_param)
+{
     // 参数检查
-    if (distortion_param.size() != 5) {
+    if (distortion_param.size() != 5)
+    {
         throw std::invalid_argument("畸变参数必须包含5个值");
     }
 
     // 获取各个畸变参数
-    double k1 = distortion_param[0];  // 径向畸变系数1
-    double k2 = distortion_param[1];  // 径向畸变系数2
-    double k3 = distortion_param[2];  // 径向畸变系数3
-    double p1 = distortion_param[3];  // 切向畸变系数1
-    double p2 = distortion_param[4];  // 切向畸变系数2
+    double k1 = distortion_param[0]; // 径向畸变系数1
+    double k2 = distortion_param[1]; // 径向畸变系数2
+    double k3 = distortion_param[2]; // 径向畸变系数3
+    double p1 = distortion_param[3]; // 切向畸变系数1
+    double p2 = distortion_param[4]; // 切向畸变系数2
 
     // 返回畸变系数数组
     return {k1, k2, k3, p1, p2};
 }
 
-CameraMatrixUtils setK(const std::vector<double>& cam_K) {
+CameraMatrixUtils setK(const std::vector<double> &cam_K)
+{
     // 从输入向量中获取相机参数
-    double fx = cam_K[0];  // 焦距x
-    double fy = cam_K[1];  // 焦距y
-    double cx = cam_K[2];  // 主点x坐标
-    double cy = cam_K[3];  // 主点y坐标
+    double fx = cam_K[0]; // 焦距x
+    double fy = cam_K[1]; // 焦距y
+    double cx = cam_K[2]; // 主点x坐标
+    double cy = cam_K[3]; // 主点y坐标
 
     // 构建内参矩阵
     Eigen::Matrix3d K;
-    K << fx,  0, cx,
-          0, fy, cy,
-          0,  0,  1;
+    K << fx, 0, cx,
+        0, fy, cy,
+        0, 0, 1;
 
     // 计算内参矩阵的逆
     Eigen::Matrix3d K_inv = K.inverse();
@@ -56,10 +61,11 @@ CameraMatrixUtils setK(const std::vector<double>& cam_K) {
     return {K, K_inv};
 }
 
-Eigen::Vector3d getRay(const std::vector<double>& pixel,
-                    const Eigen::Matrix3d& K_inv,
-                    const std::vector<double>& distortion_coeffs,
-                    const Eigen::Matrix3d& rotation) {
+Eigen::Vector3d getRay(const std::vector<double> &pixel,
+                       const Eigen::Matrix3d &K_inv,
+                       const std::vector<double> &distortion_coeffs,
+                       const Eigen::Matrix3d &rotation)
+{
     /*
     获取从相机像素点出发的射线方向。
 
@@ -90,9 +96,9 @@ Eigen::Vector3d getRay(const std::vector<double>& pixel,
     return p_world.normalized();
 }
 
-
-Eigen::Vector3d undistort_pixel_coords(const Eigen::Vector3d& p_cam,
-    const std::vector<double>& distortion_coeffs) {
+Eigen::Vector3d undistort_pixel_coords(const Eigen::Vector3d &p_cam,
+                                       const std::vector<double> &distortion_coeffs)
+{
     // 获取x和y坐标
     double x = p_cam[0];
     double y = p_cam[1];
@@ -101,18 +107,18 @@ Eigen::Vector3d undistort_pixel_coords(const Eigen::Vector3d& p_cam,
     double r_sq = std::sqrt(x * x + y * y);
 
     // 计算x方向的校正
-    double x_correction = x * (1 + distortion_coeffs[0] * r_sq + 
-    distortion_coeffs[1] * r_sq * r_sq + 
-    distortion_coeffs[2] * r_sq * r_sq * r_sq) + 
-    (2 * distortion_coeffs[3] * x * y + 
-    distortion_coeffs[4] * (r_sq * r_sq + 2 * x * x));
+    double x_correction = x * (1 + distortion_coeffs[0] * r_sq +
+                               distortion_coeffs[1] * r_sq * r_sq +
+                               distortion_coeffs[2] * r_sq * r_sq * r_sq) +
+                          (2 * distortion_coeffs[3] * x * y +
+                           distortion_coeffs[4] * (r_sq * r_sq + 2 * x * x));
 
     // 计算y方向的校正
-    double y_correction = y * (1 + distortion_coeffs[0] * r_sq + 
-    distortion_coeffs[1] * r_sq * r_sq + 
-    distortion_coeffs[2] * r_sq * r_sq * r_sq) + 
-    (distortion_coeffs[3] * (r_sq * r_sq + 2 * y * y) + 
-    2 * distortion_coeffs[4] * x * y);
+    double y_correction = y * (1 + distortion_coeffs[0] * r_sq +
+                               distortion_coeffs[1] * r_sq * r_sq +
+                               distortion_coeffs[2] * r_sq * r_sq * r_sq) +
+                          (distortion_coeffs[3] * (r_sq * r_sq + 2 * y * y) +
+                           2 * distortion_coeffs[4] * x * y);
 
     // 构建并返回校正后的坐标
     Eigen::Vector3d p_cam_distorted;
@@ -121,7 +127,8 @@ Eigen::Vector3d undistort_pixel_coords(const Eigen::Vector3d& p_cam,
     return p_cam_distorted;
 }
 
-Eigen::Matrix3d euler2mat(double yaw, double pitch, double roll, const std::string& order) {
+Eigen::Matrix3d euler2mat(double yaw, double pitch, double roll, const std::string &order)
+{
     // 转换为弧度
     double y = yaw * M_PI / 180.0;
     double p = pitch * M_PI / 180.0;
@@ -129,38 +136,44 @@ Eigen::Matrix3d euler2mat(double yaw, double pitch, double roll, const std::stri
 
     // 计算各个轴的旋转矩阵
     Eigen::Matrix3d Rx, Ry, Rz;
-    
+
     Rx << 1, 0, 0,
-          0, cos(r), -sin(r),
-          0, sin(r), cos(r);
+        0, cos(r), -sin(r),
+        0, sin(r), cos(r);
 
     Ry << cos(p), 0, sin(p),
-          0, 1, 0,
-          -sin(p), 0, cos(p);
+        0, 1, 0,
+        -sin(p), 0, cos(p);
 
     Rz << cos(y), -sin(y), 0,
-          sin(y), cos(y), 0,
-          0, 0, 1;
+        sin(y), cos(y), 0,
+        0, 0, 1;
 
     // 根据旋转顺序组合
-    if (order == "szxy") {
+    if (order == "szxy")
+    {
         return Rz * Rx * Ry;
     }
-    else if (order == "sxyz") {
+    else if (order == "sxyz")
+    {
         return Rx * Ry * Rz;
     }
-    else if (order == "syzx") {
+    else if (order == "syzx")
+    {
         return Ry * Rz * Rx;
     }
-    else if (order == "sxzy") {
+    else if (order == "sxzy")
+    {
         return Rx * Rz * Ry;
     }
-    else if (order == "syxz") {
+    else if (order == "syxz")
+    {
         return Ry * Rx * Rz;
     }
-    else if (order == "szyx") {
+    else if (order == "szyx")
+    {
         return Rz * Ry * Rx;
     }
-    
+
     throw std::invalid_argument("不支持的旋转顺序");
 }

@@ -1,10 +1,11 @@
-#include"framework/module.h"
+#include "framework/module.h"
 
-class Location : public Module{
+class Location : public Module
+{
 public:
-    Location(const std::string& name, size_t maxQueueLength = 0);
+    Location(const std::string &name, size_t maxQueueLength = 0);
     virtual ~Location() = default;
 
-    virtual void process(Package& packages) = 0;
+    virtual void process(Package &packages) = 0;
     void run() override;
 };

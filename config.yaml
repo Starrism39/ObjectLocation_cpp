@@ -3,6 +3,8 @@ global:
   map_path: &map_path "/home/xjy/code/location_Map/test_1/data/mesh_triangles.npy" #可更换地图
  # multi_map_path: &multi_map_path "data/map/yumen/Tile_geo.pkl" #暂未实现
   time_slice: &time_slice 1 # 时间线融合, 可以调整, 单位ms
+  time_sliding: &time_sliding 2 # 滑动窗口长度, 可以调整, 单位ms
+  sigma_a: &sigma_a 0.1 # 无人机加速度噪声标准差, 超参
   enable_reloaction: &enable_reloaction False
   order: &order "rzyx" # 固定参数
   max_queue_length: &max_queue_length 1000
@@ -26,7 +28,7 @@ pipeline:
   #     max_queue_length: *max_queue_length
 
   # stage2:
-  #   idx: 2
+  #   idx: 1
   #   parallel: 4  # 并行数，根据机器性能调整
   #   name: "EstiPosition"
   #   args:
@@ -74,4 +76,12 @@ output:
     name: "Fusion"
     args:
       time_slice: *time_slice
+      max_queue_length: *max_queue_length
+
+  stage2:
+    idx: 2
+    name: "Kalman"
+    args:
+      time_slice: *time_sliding
+      sigma_a: *sigma_a
       max_queue_length: *max_queue_length
