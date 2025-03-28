@@ -15,6 +15,7 @@
 
 #include "modules/fusion.h"
 #include "modules/kalman.h"
+#include "modules/output.h"
 
 // 创建测试用的ObjectInfo
 ObjectInfo CreateTestObject(uint8_t uid, uint16_t tracker_id, uint8_t label,
@@ -147,9 +148,21 @@ std::vector<std::shared_ptr<DataPackage>> generate_test_data()
 
     std::vector<ObjectInfo> objects10 = {
         CreateTestObject(0, 1, 1),
+        CreateTestObject(0, 2, 1),
+        CreateTestObject(0, 3, 2)};
+    test_packages.push_back(CreateTestDatapackage(1634567899, 2, 0, objects10));
+
+    std::vector<ObjectInfo> objects11 = {
+        CreateTestObject(0, 1, 1),
+        CreateTestObject(0, 2, 2),
+        CreateTestObject(0, 3, 4)};
+    test_packages.push_back(CreateTestDatapackage(1634567900, 1, 0, objects11));
+
+    std::vector<ObjectInfo> objects12 = {
+        CreateTestObject(0, 1, 1),
         CreateTestObject(0, 2, 4),
         CreateTestObject(0, 3, 3)};
-    test_packages.push_back(CreateTestDatapackage(1634567899, 2, 0, objects10));
+    test_packages.push_back(CreateTestDatapackage(1634567901, 2, 0, objects12));
 
     return test_packages;
 }
@@ -238,6 +251,7 @@ void setup_processing_pipeline(
     std::shared_ptr<Pipeline> &pipeline,
     std::shared_ptr<Fusion> &fusion,
     std::shared_ptr<Kalman> &kalman,
+    std::shared_ptr<Output> &output,
     std::shared_ptr<std::vector<std::shared_ptr<DataPackage>>> input_queue, // 新增输入队列
     std::shared_ptr<std::mutex> input_lock)
 {
@@ -284,12 +298,23 @@ void setup_processing_pipeline(
         fusion->getOutputLock(),
         kalman_config["args"]["sigma_a"].as<double>(),
         kalman_config["args"]["max_queue_length"].as<int>());
+    
+    // 初始传输模块
+    const auto &output_config = config["output"]["stage3"];
+    output = std::make_shared<Output>(
+        output_config["name"].as<std::string>(),
+        output_config["args"]["ip"].as<std::string>(),
+        output_config["args"]["port"].as<int>(),
+        output_config["args"]["interface"].as<std::string>(),
+        kalman->getOutputQueue(),
+        kalman->getOutputLock());
 
     // 启动所有处理线程
     converter->run();
     pipeline->run();
     fusion->run();
     kalman->run();
+    output->run();
 }
 
 int main(int argc, char *argv[])
@@ -309,7 +334,8 @@ int main(int argc, char *argv[])
         std::shared_ptr<Pipeline> pipeline;
         std::shared_ptr<Fusion> fusion;
         std::shared_ptr<Kalman> kalman;
-        setup_processing_pipeline(config, converter, pipeline, fusion, kalman, input_queue, input_lock);
+        std::shared_ptr<Output> output;
+        setup_processing_pipeline(config, converter, pipeline, fusion, kalman, output, input_queue, input_lock);
 
         // 生成测试数据
         auto test_packages = generate_test_data();
@@ -336,6 +362,7 @@ int main(int argc, char *argv[])
         pipeline->join();
         fusion->join();
         kalman->join();
+        output->join();
 
         std::cout << "==================== 流水线测试完成 ====================\n";
     }

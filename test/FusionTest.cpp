@@ -74,7 +74,7 @@ void test_fusion()
         4));
 
     // 执行融合
-    OutPackage result = Fusion::fusion(pkgs);
+    OutPackage result = Fusion::fusion(pkgs, 1);
 
     // 验证结果
     std::cout << "\n=== 测试结果 ===" << std::endl;

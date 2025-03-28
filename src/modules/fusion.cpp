@@ -78,13 +78,30 @@ cv::Mat Fusion::cutTarget(cv::Mat img, std::vector<int> Bbox)
     return img(valid_roi).clone();
 }
 
-OutPackage Fusion::fusion(std::vector<Package> &pkgs)
+OutPackage Fusion::fusion(std::vector<Package> &pkgs, double timeSlice)
 {
     OutPackage outpkg;
     if (pkgs.empty())
         return outpkg;
 
     outpkg.time = pkgs[0].time;
+
+    outpkg.time_slice = timeSlice;
+
+    std::map<uint8_t, std::vector<double>> uav_pose_map;
+    for (const auto &pkg : pkgs) {
+        if (!pkg.uav_id.empty()) {
+            try {
+                int uav_id = std::stoi(pkg.uav_id);
+                uav_pose_map[uav_id] = pkg.camera_pose;
+            } catch (const std::invalid_argument& e) {
+                std::cerr << "Invalid UAV ID format: " << pkg.uav_id << std::endl;
+            } catch (const std::out_of_range& e) {
+                std::cerr << "UAV ID out of range: " << pkg.uav_id << std::endl;
+            }
+        }
+    }
+    outpkg.uav_pose = uav_pose_map;
 
     // 按global_id分组
     std::map<int, std::vector<Package>> id_groups;
@@ -105,30 +122,20 @@ OutPackage Fusion::fusion(std::vector<Package> &pkgs)
             obj.location = group[0].location;
         }
 
-        // 4. 处理图像数据
-        for (auto &pkg : group)
-        {
-            // 从本地读取原始图像（示例路径）
-            std::string img_path = "/home/xjy/code/location_Map/test_1/data/received_image_23307y1m1d0h23m17s874ms.jpg";
-            cv::Mat raw_img = cv::imread(img_path, cv::IMREAD_COLOR);
-
-            if (!raw_img.empty())
-            {
-                // 裁剪目标区域
-                cv::Mat target_img = cutTarget(raw_img, pkg.Bbox);
-
-                // 构建uav_id到图像的映射
-                std::map<int, cv::Mat> img_map;
-                try
-                {
+        for (auto &pkg : group) {
+            try {
+                // 实际应从pkg获取图像路径
+                std::string img_path = "/home/xjy/code/location_Map/test_1/data/received_image_23307y1m1d0h23m17s874ms.jpg";
+                cv::Mat raw_img = cv::imread(img_path, cv::IMREAD_COLOR);
+                
+                if (!raw_img.empty()) {
+                    cv::Mat target_img = cutTarget(raw_img, pkg.Bbox);
                     int uav_id = std::stoi(pkg.uav_id);
-                    img_map[uav_id] = target_img;
-                    obj.uav_img.push_back(img_map);
+                    // 直接插入到uav_img map
+                    obj.uav_img[uav_id] = target_img;
                 }
-                catch (...)
-                {
-                    std::cerr << "Invalid UAV ID: " << pkg.uav_id << std::endl;
-                }
+            } catch (const std::exception& e) {
+                std::cerr << "Image processing error: " << e.what() << std::endl;
             }
         }
 
@@ -156,12 +163,12 @@ void Fusion::process()
         if (packages.empty())
             continue;
 
-        OutPackage outpkg = fusion(packages);
+        OutPackage outpkg = fusion(packages, this->timeSlice);
 
-        // 打印处理结果
-        std::cout << std::string(3, '\n');
-        std::cout << "==================== fusion ====================" << std::endl;
-        std::cout << "fusion处理后的一个OutPackage有 " << outpkg.objs.size() << " 个目标" << std::endl;
+        // // 打印处理结果
+        // std::cout << std::string(3, '\n');
+        // std::cout << "==================== fusion ====================" << std::endl;
+        // std::cout << "fusion处理后的一个OutPackage有 " << outpkg.objs.size() << " 个目标" << std::endl;
 
         // 等待输出队列有空间
         while (outputQueue->isFull())
@@ -170,8 +177,8 @@ void Fusion::process()
         }
 
         outputLock->lock();
-        // 打印每个包的信息
-        printOutPackage(outpkg);
+        // // 打印每个包的信息
+        // printOutPackage(outpkg);
         outputQueue->push(outpkg);
         outputLock->unlock();
     }

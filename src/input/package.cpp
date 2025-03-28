@@ -28,12 +28,6 @@ void DataPackage::set_camera_info(const uint8_t uav_id, const uint8_t camera_typ
     memcpy(this->camera_info_.cm.data, cm, sizeof(double) * 6);
 }
 
-void DataPackage::clear_object_info()
-{
-    this->obj_num_ = 0;
-    this->object_info_.clear();
-}
-
 void DataPackage::set_obj_num(uint8_t obj_num)
 {
     this->obj_num_ = obj_num;

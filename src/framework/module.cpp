@@ -194,42 +194,49 @@ std::string type2str(int type)
     return r;
 }
 
-void printOutPackage(const OutPackage &package)
-{
-    // 输出时间戳
-    std::cout << "Timestamp: " << package.time << "\n\n";
+void printOutPackage(const OutPackage &package) {
+    // 输出时间信息
+    std::cout << "=== Package Contents ===\n";
+    std::cout << "Timestamp: " << package.time << "\n";
+    std::cout << "Timeslice: " << std::fixed << std::setprecision(3) 
+              << package.time_slice << "s\n\n";
 
-    std::cout << "Objects (" << package.objs.size() << "):\n";
-    for (size_t i = 0; i < package.objs.size(); ++i)
-    {
-        const Object &obj = package.objs[i];
-        std::cout << "  Object[" << i << "]:\n";
-        std::cout << "    global_id: " << obj.global_id << "\n";
-
-        // 输出位置信息
-        std::cout << "    location: [";
-        for (size_t j = 0; j < obj.location.size(); ++j)
-        {
-            if (j > 0)
-                std::cout << ", ";
-            std::cout << std::fixed << std::setprecision(6) << obj.location[j];
+    // 输出无人机位姿
+    std::cout << "UAV Poses (" << package.uav_pose.size() << "):\n";
+    for (const auto &[uav_id, pose] : package.uav_pose) {
+        std::cout << "  UAV " << static_cast<int>(uav_id) << " pose: [";
+        for (size_t j = 0; j < pose.size(); ++j) {
+            if (j > 0) std::cout << ", ";
+            std::cout << std::fixed << std::setprecision(3) << pose[j];
         }
         std::cout << "]\n";
+    }
+    std::cout << "\n";
 
-        // 输出图像数据
-        std::cout << "    uav_img (" << obj.uav_img.size() << " map entries):\n";
-        for (size_t j = 0; j < obj.uav_img.size(); ++j)
-        {
-            const auto &map_entry = obj.uav_img[j];
-            std::cout << "      Map[" << j << "] (" << map_entry.size() << " elements):\n";
-            for (const auto &[key, mat] : map_entry)
-            {
-                std::cout << "        Key: " << key << "\n";
-                std::cout << "        Mat: " << mat.cols << "x" << mat.rows
-                          << "  Type: " << type2str(mat.type())
-                          << "  Channels: " << mat.channels() << "\n";
-            }
+    // 输出物体信息
+    std::cout << "Detected Objects (" << package.objs.size() << "):\n";
+    for (size_t i = 0; i < package.objs.size(); ++i) {
+        const Object &obj = package.objs[i];
+        std::cout << "  Object #" << i+1 << "\n";
+        std::cout << "    Global ID: " << obj.global_id << "\n";
+        
+        // 位置信息
+        std::cout << "    Location: [";
+        for (size_t j = 0; j < obj.location.size(); ++j) {
+            if (j > 0) std::cout << ", ";
+            std::cout << std::fixed << std::setprecision(3) << obj.location[j];
+        }
+        std::cout << "]\n";
+        
+        // 图像信息
+        std::cout << "    UAV Images (" << obj.uav_img.size() << "):\n";
+        for (const auto &[uav_id, mat] : obj.uav_img) {
+            std::cout << "      UAV " << static_cast<int>(uav_id) << ": "
+                      << mat.cols << "x" << mat.rows << " "
+                      << type2str(mat.type()) 
+                      << " (channels: " << mat.channels() << ")\n";
         }
         std::cout << "\n";
     }
+    std::cout << "=== End of Package ===\n\n";
 }

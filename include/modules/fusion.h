@@ -28,7 +28,7 @@ public:
     void join();
 
     static cv::Mat cutTarget(cv::Mat img, std::vector<int> Bbox);
-    static OutPackage fusion(std::vector<Package> &pkgs);
+    static OutPackage fusion(std::vector<Package> &pkgs, double timeSlice);
 
 private:
     void process();

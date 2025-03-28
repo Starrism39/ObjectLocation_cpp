@@ -8,6 +8,9 @@ global:
   enable_reloaction: &enable_reloaction False
   order: &order "rzyx" # 固定参数
   max_queue_length: &max_queue_length 1000
+  output_ip: &output_ip "127.0.0.1"
+  output_port: &output_port 12345
+  output_interface: &output_interface "lo"
 
 input:
 
@@ -48,7 +51,7 @@ pipeline:
 
   stage1:
     idx: 1
-    parallel: 2  # 并行数，不建议太大
+    parallel: 1  # 并行数，不建议太大
     name: "EstiPosition"
     args:
       is_multi_map : False
@@ -85,3 +88,11 @@ output:
       time_slice: *time_sliding
       sigma_a: *sigma_a
       max_queue_length: *max_queue_length
+
+  stage3:
+    idx: 3
+    name: "UdpOutput"
+    args:
+      ip: *output_ip
+      port: *output_port
+      interface: *output_interface

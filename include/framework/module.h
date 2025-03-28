@@ -60,11 +60,13 @@ private:
 struct Object{
     int global_id;
     std::vector<double> location;
-    std::vector<std::map<int, cv::Mat>> uav_img;
+    std::map<uint8_t, cv::Mat> uav_img;
 };
 
 struct OutPackage{
     time_t time;
+    double time_slice;
+    std::map<uint8_t, std::vector<double>> uav_pose;
     std::vector<Object> objs;
 };
 

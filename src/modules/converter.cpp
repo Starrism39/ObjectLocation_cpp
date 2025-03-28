@@ -43,7 +43,7 @@ std::vector<double> PackageConverter::GetCameraIntrinsics(int camera_type)
         return {1000.0, 1000.0, 320.0, 240.0}; // fx, fy, cx, cy
     case 1:                                    // 红外相机
         return {1000.0, 1000.0, 320.0, 240.0};
-    case 2: // 微光相机
+    case 2:                                    // 微光相机
         return {1000.0, 1000.0, 320.0, 240.0};
     default:
         throw std::runtime_error("未知的相机类型");

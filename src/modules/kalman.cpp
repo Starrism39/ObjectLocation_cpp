@@ -106,6 +106,8 @@ OutPackage Kalman::kalman(std::vector<OutPackage> &pkgs, float sigma_a)
     }
 
     result.time = latest_pkg.time; // 使用最新包的时间
+    result.time_slice = latest_pkg.time_slice;
+    result.uav_pose = latest_pkg.uav_pose;
 
     // 维护每个目标的卡尔曼滤波器和上次处理时间
     std::map<int, cv::KalmanFilter> kf_map;

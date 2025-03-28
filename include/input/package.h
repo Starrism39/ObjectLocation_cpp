@@ -93,7 +93,6 @@ public:
     void set_camera_info(const uint8_t uav_id, const uint8_t camera_type, const double *cm); // 设置相机信息
 
     // 目标检测
-    void clear_object_info();                     // 清空目标
     void set_obj_num(uint8_t obj_num);            // 设置目标数量
     void push_object_info(const ObjectInfo &obj); // 添加目标信息
     // xfeat
