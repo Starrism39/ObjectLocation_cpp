@@ -3,6 +3,57 @@
 
 #include "modules/esti_position.h"
 
+void printMeshData(const std::vector<std::vector<std::vector<float>>> &mesh_data,
+                   int max_layers = 10, // 最大打印层数（防止数据过大）
+                   int max_rows = 5,   // 每层最大行数
+                   int max_cols = 5)
+{ // 每行最大列数
+    std::cout << "Mesh Data ["
+              << mesh_data.size() << " layers]"
+              << std::endl;
+
+    // 遍历每一层
+    for (size_t layer = 0; layer < mesh_data.size() && layer < max_layers; ++layer)
+    {
+        std::cout << "\n── Layer " << layer << " ──\n";
+
+        // 遍历每一行
+        for (size_t row = 0; row < mesh_data[layer].size() && row < max_rows; ++row)
+        {
+            std::cout << "  Row " << row << ": [ ";
+
+            // 遍历每个元素
+            for (size_t col = 0; col < mesh_data[layer][row].size() && col < max_cols; ++col)
+            {
+                std::cout << mesh_data[layer][row][col];
+                if (col != mesh_data[layer][row].size() - 1)
+                    std::cout << ", ";
+            }
+
+            // 如果数据被截断，显示省略号
+            if (mesh_data[layer][row].size() > max_cols)
+                std::cout << ", ...";
+            std::cout << " ]\n";
+        }
+
+        // 如果行数被截断，显示省略信息
+        if (mesh_data[layer].size() > max_rows)
+        {
+            std::cout << "  ... (showing " << max_rows
+                      << "/" << mesh_data[layer].size()
+                      << " rows)\n";
+        }
+    }
+
+    // 如果层数被截断，显示省略信息
+    if (mesh_data.size() > max_layers)
+    {
+        std::cout << "\n... (showing " << max_layers
+                  << "/" << mesh_data.size()
+                  << " layers)\n";
+    }
+}
+
 EstiPosition::EstiPosition(bool is_multi_map,
                            const std::string &mesh_path,
                            double default_height,
@@ -87,8 +138,12 @@ std::vector<double> EstiPosition::getPoint(const Package &data)
         // 单尺度地图实现
         glm::vec3 source(t.x(), t.y(), t.z());
         glm::vec3 direction(ray.x(), ray.y(), ray.z());
+        std::cout << "t: " << t[0] << " " << t[1] << " " << t[2] << std::endl;
+        std::cout << "ray: " << ray[0] << " " << ray[1] << " " << ray[2] << std::endl;
 
         std::vector<RaycastHit> result = raycast(source, direction, mesh_data, num_triangles);
+        // std::cout << "num_triangles: " << num_triangles << std::endl;
+        // printMeshData(mesh_data);
 
         if (result.empty())
         {

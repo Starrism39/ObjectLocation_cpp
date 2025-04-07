@@ -201,22 +201,5 @@ Eigen::Matrix3d euler2mat(double yaw, double pitch, double roll, const std::stri
     {
         return Rz * Ry * Rx;
     }
-    else if (order == "rXYZ")
-    {
-        return Rx * Ry * Rz;
-    }
-    else if (order == "rXZY")
-    {
-        return Rx * Rz * Ry;
-    }
-    else if (order == "rYXZ")
-    {
-        return Ry * Rx * Rz;
-    }
-    else if (order == "rYZX")
-    {
-        return Ry * Rz * Rx;
-    }
-
     throw std::invalid_argument("不支持的旋转顺序");
 }

@@ -49,10 +49,17 @@ int main()
     Package test_pkg;
 
     // 填充相机参数 (示例值，需根据实际数据调整)
-    test_pkg.camera_pose = {1.57, 0.0, 0.0, 500.0, 600.0, 200.0};    // [yaw, pitch, roll, x, y, z]
-    test_pkg.camera_K = {1000.0, 1000.0, 320.0, 240.0};              // [fx, fy, cx, cy]
-    test_pkg.camera_distortion = {0.01, -0.02, 0.001, 0.002, 0.005}; // [k1, k2, p1, p2, k3]
-    test_pkg.norm_Bbox = {0.5, 0.5, 0.2, 0.3};                       // 归一化BBox
+    test_pkg.camera_pose = {0, -90.0 * M_PI / 180.0, 0.0, 224.0, -60.0, 50.0};    // [yaw, pitch, roll, x, y, z]
+    test_pkg.camera_K = {1000.0, 1000.0, 960.0, 540.0};              // [fx, fy, cx, cy]
+    test_pkg.camera_distortion = {0.0, 0.0, 0.0, 0.0, 0.0}; // [k1, k2, p1, p2, k3]
+    const double bbox_width = 0.01;  // 归一化宽度
+    const double bbox_height = 0.01; // 归一化高度
+    test_pkg.norm_Bbox = {
+        0.5 - bbox_width / 2,   // 中心对齐x坐标
+        0.5 - bbox_height / 2,  // 中心对齐y坐标
+        bbox_width,
+        bbox_height
+    };
     initBBoxParameters(test_pkg);
     test_pkg.uav_utm = simulateBBoxProjection(test_pkg); // 无人机UTM坐标
     PrintPackage(test_pkg);
@@ -64,7 +71,7 @@ int main()
         // 初始化估计器（单尺度地图模式）
         EstiPosition estimator(
             false,                                                        // is_multi_map
-            "/home/xjy/code/location_Map/test_1/data/mesh_triangles.npy", // 替换为实际网格路径
+            "/home/orin/ObjectLocation_cpp/data/mesh_triangles.npy", // 替换为实际网格路径
             60.0,                                                         // default_height
             "szyx",                                                       // 欧拉角顺序
             true                                                          // enable=true
@@ -89,7 +96,7 @@ int main()
         // 初始化估计器（关闭相机定位）
         EstiPosition estimator(
             false,                                                        // is_multi_map
-            "/home/xjy/code/location_Map/test_1/data/mesh_triangles.npy", // 替换为实际网格路径
+            "/home/orin/ObjectLocation_cpp/data/mesh_triangles.npy", // 替换为实际网格路径
             60.0,                                                         // default_height
             "rzyx",                                                       // 欧拉角顺序
             false                                                         // enable=false
