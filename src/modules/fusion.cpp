@@ -125,7 +125,7 @@ OutPackage Fusion::fusion(std::vector<Package> &pkgs, double timeSlice)
         for (auto &pkg : group) {
             try {
                 // 实际应从pkg获取图像路径
-                std::string img_path = "/home/xjy/code/location_Map/test_1/data/received_image_23307y1m1d0h23m17s874ms.jpg";
+                std::string img_path = "/home/orin/ObjectLocation_cpp/data/received_image_23307y1m1d0h23m17s874ms.jpg";
                 cv::Mat raw_img = cv::imread(img_path, cv::IMREAD_COLOR);
                 
                 if (!raw_img.empty()) {

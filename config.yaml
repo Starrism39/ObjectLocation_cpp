@@ -1,12 +1,12 @@
 # 默认配置文件，部分参数可以修改，但注意是否正确，否则报错
 global:
-  map_path: &map_path "/home/xjy/code/location_Map/test_1/data/mesh_triangles.npy" #可更换地图
+  map_path: &map_path "/home/orin/ObjectLocation_cpp/data/mesh_triangles.npy" #可更换地图
  # multi_map_path: &multi_map_path "data/map/yumen/Tile_geo.pkl" #暂未实现
   time_slice: &time_slice 1 # 时间线融合, 可以调整, 单位ms
   time_sliding: &time_sliding 2 # 滑动窗口长度, 可以调整, 单位ms
   sigma_a: &sigma_a 0.1 # 无人机加速度噪声标准差, 超参
-  enable_reloaction: &enable_reloaction False
-  order: &order "rzyx" # 固定参数
+  enable_reloaction: &enable_reloaction True
+  order: &order "szyx" # 固定参数
   max_queue_length: &max_queue_length 1000
   output_ip: &output_ip "127.0.0.1"
   output_port: &output_port 12345

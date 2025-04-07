@@ -32,12 +32,12 @@ std::vector<double> setDistortionCoeffs(const std::vector<double> &distortion_pa
     // 获取各个畸变参数
     double k1 = distortion_param[0]; // 径向畸变系数1
     double k2 = distortion_param[1]; // 径向畸变系数2
-    double k3 = distortion_param[2]; // 径向畸变系数3
-    double p1 = distortion_param[3]; // 切向畸变系数1
-    double p2 = distortion_param[4]; // 切向畸变系数2
+    double p1 = distortion_param[2]; // 切向畸变系数1
+    double p2 = distortion_param[3]; // 切向畸变系数2
+    double k3 = distortion_param[4]; // 径向畸变系数3
 
     // 返回畸变系数数组
-    return {k1, k2, k3, p1, p2};
+    return {k1, k2, p1, p2, k3};
 }
 
 CameraMatrixUtils setK(const std::vector<double> &cam_K)
@@ -99,32 +99,59 @@ Eigen::Vector3d getRay(const std::vector<double> &pixel,
 Eigen::Vector3d undistort_pixel_coords(const Eigen::Vector3d &p_cam,
                                        const std::vector<double> &distortion_coeffs)
 {
-    // 获取x和y坐标
-    double x = p_cam[0];
-    double y = p_cam[1];
+    // 提取归一化坐标的x和y分量
+    double x = p_cam.x();
+    double y = p_cam.y();
 
-    // 计算径向距离
-    double r_sq = std::sqrt(x * x + y * y);
+    // 初始化为输入的畸变坐标
+    double x_undist = x;
+    double y_undist = y;
 
-    // 计算x方向的校正
-    double x_correction = x * (1 + distortion_coeffs[0] * r_sq +
-                               distortion_coeffs[1] * r_sq * r_sq +
-                               distortion_coeffs[2] * r_sq * r_sq * r_sq) +
-                          (2 * distortion_coeffs[3] * x * y +
-                           distortion_coeffs[4] * (r_sq * r_sq + 2 * x * x));
+    // 迭代求解去畸变坐标（通常5次迭代足够）
+    const int num_iterations = 5;
+    for (int i = 0; i < num_iterations; ++i)
+    {
+        double r2 = x_undist * x_undist + y_undist * y_undist;
+        double r4 = r2 * r2;
+        double r6 = r4 * r2;
 
-    // 计算y方向的校正
-    double y_correction = y * (1 + distortion_coeffs[0] * r_sq +
-                               distortion_coeffs[1] * r_sq * r_sq +
-                               distortion_coeffs[2] * r_sq * r_sq * r_sq) +
-                          (distortion_coeffs[3] * (r_sq * r_sq + 2 * y * y) +
-                           2 * distortion_coeffs[4] * x * y);
+        // 计算径向畸变系数
+        double radial = 1.0;
+        if (distortion_coeffs.size() > 0)
+        {
+            radial += distortion_coeffs[0] * r2;
+        }
+        if (distortion_coeffs.size() > 1)
+        {
+            radial += distortion_coeffs[1] * r4;
+        }
+        if (distortion_coeffs.size() > 4)
+        {
+            radial += distortion_coeffs[4] * r6;
+        }
 
-    // 构建并返回校正后的坐标
-    Eigen::Vector3d p_cam_distorted;
-    p_cam_distorted << x_correction, y_correction, 1.0;
+        // 计算切向畸变
+        double tangential_x = 0.0;
+        double tangential_y = 0.0;
+        if (distortion_coeffs.size() > 2)
+        {
+            double p1 = distortion_coeffs[2];
+            double p2 = distortion_coeffs[3];
+            tangential_x = 2 * p1 * x_undist * y_undist + p2 * (r2 + 2 * x_undist * x_undist);
+            tangential_y = p1 * (r2 + 2 * y_undist * y_undist) + 2 * p2 * x_undist * y_undist;
+        }
 
-    return p_cam_distorted;
+        // 计算当前猜测的畸变坐标
+        double x_distorted = x_undist * radial + tangential_x;
+        double y_distorted = y_undist * radial + tangential_y;
+
+        // 更新去畸变坐标的估计值
+        x_undist += x - x_distorted;
+        y_undist += y - y_distorted;
+    }
+
+    // 返回去畸变后的归一化坐标（齐次形式）
+    return Eigen::Vector3d(x_undist, y_undist, 1.0);
 }
 
 Eigen::Matrix3d euler2mat(double yaw, double pitch, double roll, const std::string &order)
@@ -173,6 +200,22 @@ Eigen::Matrix3d euler2mat(double yaw, double pitch, double roll, const std::stri
     else if (order == "szyx")
     {
         return Rz * Ry * Rx;
+    }
+    else if (order == "rXYZ")
+    {
+        return Rx * Ry * Rz;
+    }
+    else if (order == "rXZY")
+    {
+        return Rx * Rz * Ry;
+    }
+    else if (order == "rYXZ")
+    {
+        return Ry * Rx * Rz;
+    }
+    else if (order == "rYZX")
+    {
+        return Ry * Rz * Rx;
     }
 
     throw std::invalid_argument("不支持的旋转顺序");

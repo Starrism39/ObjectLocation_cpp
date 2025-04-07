@@ -11,8 +11,18 @@ if(CMAKE_TOOLCHAIN_FILE)
 endif()
 
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wl,--allow-shlib-undefined  -Wno-class-memaccess -Wno-deprecated-declarations -Wno-sign-compare -mpclmul -mavx2")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -Wl,--allow-shlib-undefined  -Wno-class-memaccess -Wno-deprecated-declarations -Wno-sign-compare -mpclmul -mavx2")
+set(COMMON_FLAGS " -Wl,--allow-shlib-undefined -Wno-class-memaccess -Wno-deprecated-declarations -Wno-sign-compare")
+# 平台特定优化（仅 x86_64 启用）
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64")
+    set(COMMON_FLAGS "${COMMON_FLAGS} -mpclmul -mavx2")
+# 平台特定优化（仅 arm 启用）
+elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
+    add_compile_options(-mcpu=native )
+endif()
+# 设置 C/C++ 编译选项
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${COMMON_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COMMON_FLAGS}")
+
 
 set(CMAKE_CXX_STANDARD "${CXX_STD}")
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
