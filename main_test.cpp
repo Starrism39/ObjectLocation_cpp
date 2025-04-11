@@ -259,7 +259,7 @@ void setup_processing_pipeline(
     std::shared_ptr<std::mutex> input_lock)
 {
     // 初始化数据转换模块
-    const auto &input_config = config["input"]["stage1"];
+    const auto &input_config = config["input"]["stage2"];
     converter = std::make_shared<PackageConverter>(
         input_config["name"].as<std::string>(),
         input_queue,

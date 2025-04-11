@@ -17,9 +17,9 @@ private:
     size_t location_stream_len_ = 0;             // 传输给定位模块码流长度
     std::unique_ptr<uint8_t[]> location_stream_; // 传输给定位模块码流
     int jpeg_quality_ = 50;                      // 压缩质量，0-100
-    std::vector<uchar> img_encoder(cv::Mat img)
+    std::vector<uint8_t> img_encoder(const cv::Mat &img)
     {
-        std::vector<uchar> jpeg_buffer;
+        std::vector<uint8_t> jpeg_buffer;
         std::vector<int> compression_params;
         compression_params.push_back(cv::IMWRITE_JPEG_QUALITY);
         compression_params.push_back(jpeg_quality_); // 压缩质量，0-100
@@ -27,7 +27,7 @@ private:
         return jpeg_buffer;
     };
 
-    cv::Mat img_decoder(const std::vector<uchar> &jpeg_data)
+    cv::Mat img_decoder(const std::vector<uint8_t> &jpeg_data)
     {
         cv::Mat img = cv::imdecode(jpeg_data, cv::IMREAD_GRAYSCALE);
         return img;

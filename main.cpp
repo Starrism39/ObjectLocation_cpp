@@ -107,10 +107,13 @@ void setup_processing_pipeline(
 {
     // 初始化数据输入模块
     const auto &input_config = config["input"]["stage1"];
+    std::string endpoint1 = input_config["args"]["endpoint1"].as<std::string>();
+    std::string endpoint2 = input_config["args"]["endpoint2"].as<std::string>();
+    std::vector<std::string> endpoints = {endpoint1, endpoint2};
+    std::cout << "\nBuilding " << input_config["name"].as<std::string>() << std::endl;
     input = std::make_shared<Input>(
         input_config["name"].as<std::string>(),
-        input_config["args"]["endpoint1"].as<std::string>(),
-        input_config["args"]["endpoint2"].as<std::string>(),
+        endpoints,
         input_config["args"]["topic"].as<std::string>());
 
     // 初始化数据转换模块
@@ -168,6 +171,7 @@ void setup_processing_pipeline(
         kalman->getOutputLock());
 
     // 启动所有处理线程
+    input->run();
     converter->run();
     pipeline->run();
     fusion->run();

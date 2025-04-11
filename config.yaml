@@ -18,7 +18,7 @@ input:
     idx: 1
     name: "ZeroMQ"
     args:
-      endpoint1: "ipc:///tmp/zmq-test0"
+      endpoint1: "ipc:///tmp/zmq-test"
       endpoint2: "ipc:///tmp/zmq-test1"
       topic: "land_stream"
 

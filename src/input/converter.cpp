@@ -204,7 +204,7 @@ void PackageConverter::process()
         // 处理数据包
         std::vector<Package> packages = ConvertToPackages(data_pkg);
 
-        // 打印处理结果
+        // // 打印处理结果
         // std::cout << std::string(3, '\n');
         // std::cout << "==================== converter ====================" << std::endl;
         // std::cout << "时间戳 " << data_pkg->get_timestamp() << " 的数据包处理后得到 " << packages.size() << " 个数据包" << std::endl;
@@ -213,7 +213,7 @@ void PackageConverter::process()
         outputLock->lock();
         for (const auto &package : packages)
         {
-            // 打印每个包的信息
+            // // 打印每个包的信息
             // PrintPackage(package);
 
             // 等待输出队列有空间

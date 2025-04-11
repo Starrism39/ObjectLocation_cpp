@@ -1,3 +1,19 @@
+/*************************************************************************************************************************
+ * Copyright 2025 Grifcc
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the “Software”), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
+ * Software.
+ *
+ * THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+ * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+ * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *************************************************************************************************************************/
 #include "framework/package.h"
 #include "utils/two_byte_float.h"
 
@@ -81,6 +97,13 @@ void DataPackage::set_background(const uint8_t *background, const size_t len)
     this->background_len_ = len;
     this->background_ = std::make_unique<uint8_t[]>(len);
     memcpy(this->background_.get(), background, len);
+}
+
+void DataPackage::set_stream(const uint8_t *stream, const size_t len)
+{
+    this->stream_len_ = len;
+    this->stream_ = std::make_unique<uint8_t[]>(len);
+    memcpy(this->stream_.get(), stream, len);
 }
 
 void DataPackage::set_keyframe(bool key_frame)
@@ -183,73 +206,78 @@ void DataPackage::encoder_stream()
     offset += 2;
 
     // 背景
-    memcpy(stream_.get() + offset, background_.get(), background_len_);
-    offset += background_len_;
+    memcpy(this->stream_.get() + offset, this->background_.get(), this->background_len_);
+    offset += this->background_len_;
 
     // 前景
-    memcpy(stream_.get() + offset, foreground_.get(), foreground_len_);
-    offset += foreground_len_;
+    memcpy(this->stream_.get() + offset, this->foreground_.get(), this->foreground_len_);
+    offset += this->foreground_len_;
 }
 
-void DataPackage::parse_stream(uint8_t *stream, const size_t len)
+void DataPackage::parse_stream()
 {
+    if(this->stream_len_ == 0)
+    {
+        return;
+    }
+
     size_t offset = 0;
 
     // 时间戳
-    memcpy(&this->timestamp_, stream + offset, sizeof(uint64_t));
+    memcpy(&this->timestamp_, this->stream_.get() + offset, sizeof(uint64_t));
     offset += sizeof(uint64_t);
 
     // 相机信息和帧类型
     uint8_t ck;
-    memcpy(&ck, stream + offset, 1);
+    memcpy(&ck, this->stream_.get() + offset, 1);
     this->camera_info_.uav_id = ck >> 4;
     this->camera_info_.camera_type = (ck >> 2) & 0x3;
     this->key_frame_ = ck & 0x1;
     offset += sizeof(uint8_t);
 
     // H矩阵
-    memcpy(this->homography_.data, stream + offset, sizeof(Homography));
+    memcpy(this->homography_.data, this->stream_.get() + offset, sizeof(Homography));
     offset += sizeof(Homography);
 
     // 相机外参矩阵
-    memcpy(this->camera_info_.cm.data, stream + offset, sizeof(CameraMatrix));
+    memcpy(this->camera_info_.cm.data, this->stream_.get() + offset, sizeof(CameraMatrix));
     offset += sizeof(CameraMatrix);
 
     // 激光距离
     uint16_t laser_distance_raw;
-    memcpy(&laser_distance_raw, stream + offset, 2);
+    memcpy(&laser_distance_raw, this->stream_.get() + offset, 2);
     this->laser_distance_ = TwoByteFloat(laser_distance_raw).toFloat();
     offset += 2;
 
     // 目标数量
-    memcpy(&this->obj_num_, stream + offset, 1);
+    memcpy(&this->obj_num_, this->stream_.get() + offset, 1);
     offset += 1;
 
     // 目标信息
     for (size_t i = 0; i < this->obj_num_; i++)
     {
         ObjectInfo obj;
-        unpack_objinfo(stream + offset, obj);
+        unpack_objinfo(this->stream_.get() + offset, obj);
         this->object_info_.push_back(obj);
         offset += 7;
     }
 
     //  背景大小
     uint16_t background_len;
-    memcpy(&background_len, stream + offset, 2);
+    memcpy(&background_len, this->stream_.get() + offset, 2);
     this->background_len_ = background_len;
     offset += 2;
-    this->foreground_len_ = len - offset - background_len;
+    this->foreground_len_ = this->stream_len_ - offset - background_len;
     this->foreground_ = std::make_unique<uint8_t[]>(this->foreground_len_);
     this->background_ = std::make_unique<uint8_t[]>(this->background_len_);
 
     // 背景
-    memcpy(background_.get(), stream + offset, background_len_);
-    offset += background_len_;
+    memcpy(this->background_.get(), this->stream_.get() + offset, this->background_len_);
+    offset += this->background_len_;
 
     // 前景
-    memcpy(foreground_.get(), stream + offset, foreground_len_);
-    offset += foreground_len_;
+    memcpy(this->foreground_.get(), this->stream_.get() + offset, this->foreground_len_);
+    offset += this->foreground_len_;
 }
 
 uint64_t DataPackage::get_timestamp() const

@@ -6,7 +6,7 @@ tips:使用之前先到package.h把图像大小改了，再到converter.cpp把�
             (DataConvert)     (TimeFilter)    (EstiPosition)   (SpatialFilter)    (Fusion)        (Kalman)
 
 代码详细说明：
-1. 输入模块获取按时间戳由小到大排序的DataPackage队列(本模块的轮子由他人提供，不在原本的框架中)。
+1. 输入模块获取DataPackage队列。
 
 2. 数据转换模块将DataPackage拆分并转换成对本模块友好的Package包。
 
@@ -25,7 +25,8 @@ tips:使用之前先到package.h把图像大小改了，再到converter.cpp把�
 Eigen, 
 yaml-cpp, 
 pthread, 
-opencv
+opencv,
+ZeroMQ
 
 
 问题记录：

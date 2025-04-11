@@ -109,6 +109,7 @@ public:
     void set_foreground(const uint8_t *foreground, const size_t len); // 设置前景流(bbox&bbox[i-1])
     void set_background(const uint8_t *background, const size_t len); // 设置背景流
     void set_keyframe(bool key_frame);                                // 设置关键帧
+    void set_stream(const uint8_t *stream, const size_t len); // 设置码流
 
     // 机上几下均有
     void set_rgb(const cv::Mat &rgb);           // 设置rgb图像，源和decoder
@@ -122,7 +123,7 @@ public:
     void encoder_stream();
 
     // 机下
-    void parse_stream(uint8_t *stream, const size_t len); // 解析流(recv module 包含熵编码的decoder)
+    void parse_stream(); // 解析流(recv module 包含熵编码的decoder)
 
     uint64_t get_timestamp() const;                  // 获取时间戳， location, display
     bool is_keyframe() const;                        // 判断是否为关键帧, decoder

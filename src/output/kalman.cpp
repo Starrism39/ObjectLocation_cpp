@@ -67,10 +67,10 @@ void Kalman::process()
 
         OutPackage outpkg = kalman(packages, sigma_a);
 
-        // // 打印处理结果
-        // std::cout << std::string(3, '\n');
-        // std::cout << "==================== kalman ====================" << std::endl;
-        // std::cout << "kalman处理后的一个OutPackage有 " << outpkg.objs.size() << " 个目标" << std::endl;
+        // 打印处理结果
+        std::cout << std::string(3, '\n');
+        std::cout << "==================== kalman ====================" << std::endl;
+        std::cout << "kalman处理后的一个OutPackage有 " << outpkg.objs.size() << " 个目标" << std::endl;
 
         // 等待输出队列有空间
         while (outputQueue->isFull())
@@ -79,8 +79,8 @@ void Kalman::process()
         }
 
         outputLock->lock();
-        // // 打印每个包的信息
-        // printOutPackage(outpkg);
+        // 打印每个包的信息
+        printOutPackage(outpkg);
         outputQueue->push(outpkg);
         outputLock->unlock();
     }

@@ -3,7 +3,8 @@
 int main()
 {
     // 初始化输入模块
-    Input input("input", "ipc:///tmp/zmq-test0", "ipc:///tmp/zmq-test1", "land_stream");
+    std::vector<std::string> endpoints = {"ipc:///tmp/zmq-test", "ipc:///tmp/zmq-test1"};
+    Input input("input", endpoints, "land_stream");
 
     // 设置输出队列
     auto outputQueue = input.getOutputQueue();
@@ -59,6 +60,8 @@ int main()
                       << camera_matrix.member.pitch << " "
                       << camera_matrix.member.roll;
             std::cout << std::endl;
+            cv::Mat rgb = pkg->get_rgb();
+            cv::imwrite("/home/orin/ObjectLocation_cpp/data/test_result/r_" + std::to_string(pkg->get_timestamp()) + ".jpg", rgb);
         }
     }
 

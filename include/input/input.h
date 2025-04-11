@@ -6,15 +6,14 @@
 #include <iomanip>
 
 #include "utils/zero_mq_client.h"
-#include "utils/package_land_station.h"
+#include "framework/package_land_station.h"
 #include "utils/threadsafe_queue.h"
 
 class Input
 {
 public:
     Input(const std::string &name,
-          std::string &&endpoint1,
-          std::string &&endpoint2,
+          std::vector<std::string> endpoints,
           std::string &&topic);
     ~Input();
 
@@ -41,8 +40,6 @@ protected:
     std::atomic<bool> isRunning;
     std::thread thread_;
 
-    ZmqPoller *poller_;
-    ZeroMqSubscriber subscriber1_;
-    ZeroMqSubscriber subscriber2_;
+    ZeroMqSubscriber subscriber_;
     threadsafe_queue<std::vector<uint8_t>>* messageQueue_;
 };

@@ -25,10 +25,10 @@ void Filter::run()
 
         packages = process(packages);
 
-        // 打印处理结果
-        std::cout << std::string(3, '\n');
-        std::cout << "==================== spatial filter ====================" << std::endl;
-        std::cout << "spatial fliter处理后得到 " << packages.size() << " 个数据包" << std::endl;
+        // // 打印处理结果
+        // std::cout << std::string(3, '\n');
+        // std::cout << "==================== spatial filter ====================" << std::endl;
+        // std::cout << "spatial fliter处理后得到 " << packages.size() << " 个数据包" << std::endl;
 
         for (const auto &package : packages)
         {
@@ -38,8 +38,8 @@ void Filter::run()
             }
 
             outputLock->lock();
-            // 打印每个包的信息
-            PrintPackage(package);
+            // // 打印每个包的信息
+            // PrintPackage(package);
             outputQueue->push(package);
             outputLock->unlock();
         }

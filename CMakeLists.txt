@@ -126,10 +126,10 @@ aux_source_directory(${PROJECT_SOURCE_DIR}/src/output DET_SRC_DIR)
 add_subdirectory(test/)
 
 
-# add_executable(main_test main_test.cpp ${DET_SRC_DIR})
-# target_link_libraries(main_test PRIVATE ${OpenCV_LIBS} ${ZeroMQ_LIBRARIES} Threads::Threads yaml-cpp)
-# set_target_properties(main_test PROPERTIES
-#     RUNTIME_OUTPUT_DIRECTORY ${EXECUTABLE_OUTPUT_PATH}/bin)
+add_executable(main_test main_test.cpp ${DET_SRC_DIR})
+target_link_libraries(main_test PRIVATE ${OpenCV_LIBS} ${ZeroMQ_LIBRARIES} Threads::Threads yaml-cpp)
+set_target_properties(main_test PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${EXECUTABLE_OUTPUT_PATH}/bin)
 
 add_executable(main main.cpp ${DET_SRC_DIR})
 target_link_libraries(main PRIVATE ${OpenCV_LIBS} ${ZeroMQ_LIBRARIES} Threads::Threads yaml-cpp)

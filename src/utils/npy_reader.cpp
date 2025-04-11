@@ -130,7 +130,7 @@ bool NPYReader::ParseHeader(const std::string &header, bool &fortran_order,
         }
 
         // 打印最终的 shape 信息
-        // std::cout << "Final shape: [";
+        std::cout << "Final shape: [";
         for (size_t i = 0; i < shape.size(); ++i)
         {
             std::cout << shape[i];

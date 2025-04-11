@@ -1,16 +1,13 @@
 #include "input/input.h"
 
 Input::Input(const std::string &name,
-             std::string &&endpoint1,
-             std::string &&endpoint2,
+             std::vector<std::string> endpoints,
              std::string &&topic)
     : name(name),
       isRunning(false),
-      poller_(new ZmqPoller(10)),
-      subscriber1_(endpoint1, topic, poller_),
-      subscriber2_(endpoint2, topic, poller_)
+      subscriber_(endpoints, topic, 10)
 {
-    std::cout << "Building " << name << std::endl;
+    // std::cout << "Building " << name << std::endl;
 
     // 初始化输出队列和锁
     outputQueue = std::make_shared<std::vector<std::shared_ptr<DataPackage>>>();
@@ -18,14 +15,12 @@ Input::Input(const std::string &name,
     messageQueue_ = new threadsafe_queue<std::vector<uint8_t>>();
 
     // 设置消息回调
-    subscriber1_.setMessageHandler(&Input::messageHandler, this);
-    subscriber2_.setMessageHandler(&Input::messageHandler, this);
+    subscriber_.addMessageHandler(&Input::messageHandler, this);
 }
 
 Input::~Input()
 {
     stop();
-    delete poller_;
     delete messageQueue_; // 释放指针
 }
 
@@ -60,8 +55,11 @@ void Input::messageHandler(void *param, zmq::message_t &message, std::string &to
     const auto *data = static_cast<uint8_t *>(message.data());
 
     // 指针方式访问队列
-    self->messageQueue_->push(
-        std::vector<uint8_t>(data, data + message.size()));
+    if (message.size() != topic.size())
+    {
+        self->messageQueue_->push(
+            std::vector<uint8_t>(data, data + message.size()));
+    }
 }
 
 // 处理线程
@@ -72,10 +70,12 @@ void Input::process()
         std::vector<uint8_t> message;
 
         messageQueue_->wait_and_pop(message);
+        // std::cout << "主线程收到消息大小: " << message.size() << std::endl;
         try
         {
+            
             auto dataPkg = std::make_shared<DataPackageLandStation>();
-            dataPkg->parse_stream_location(message.data(), message.size());
+            dataPkg->parse_stream_location((uint8_t *)message.data(), message.size());
 
             // 推送至输出队列
             std::lock_guard<std::mutex> lock(*outputLock);
@@ -92,7 +92,7 @@ void Input::process()
 void Input::run()
 {
     isRunning = true;
-    poller_->start();
+    subscriber_.start();
     thread_ = std::thread(&Input::process, this);
 }
 
@@ -102,7 +102,6 @@ void Input::stop()
     if (isRunning)
     {
         isRunning = false;
-        poller_->stop();
         join();
     }
 }

@@ -1,4 +1,5 @@
-# add_executable(InputTest ${PROJECT_SOURCE_DIR}/test/InputTest.cpp ${DET_SRC_DIR} ${DET_SRC_DIR_INP})
+add_executable(InputTest ${PROJECT_SOURCE_DIR}/test/InputTest.cpp ${DET_SRC_DIR} ${DET_SRC_DIR_INP})
+add_executable(ZeroMQTest ${PROJECT_SOURCE_DIR}/test/ZeroMQTest.cpp ${DET_SRC_DIR} ${DET_SRC_DIR_INP})
 # add_executable(RaycastTest ${PROJECT_SOURCE_DIR}/test/RaycastTest.cpp ${DET_SRC_DIR})
 # add_executable(SpatialTest ${PROJECT_SOURCE_DIR}/test/SpatialTest.cpp ${DET_SRC_DIR})
 # add_executable(TimeTest ${PROJECT_SOURCE_DIR}/test/TimeTest.cpp ${DET_SRC_DIR})
@@ -7,7 +8,8 @@
 # add_executable(FusionTest ${PROJECT_SOURCE_DIR}/test/FusionTest.cpp ${DET_SRC_DIR})
 # add_executable(KalmanTest ${PROJECT_SOURCE_DIR}/test/KalmanTest.cpp ${DET_SRC_DIR})
 
-# target_link_libraries(InputTest PRIVATE ${OpenCV_LIBS} ${ZeroMQ_LIBRARIES} Threads::Threads)
+target_link_libraries(InputTest PRIVATE ${OpenCV_LIBS} ${ZeroMQ_LIBRARIES} Threads::Threads)
+target_link_libraries(ZeroMQTest PRIVATE ${OpenCV_LIBS} ${ZeroMQ_LIBRARIES} Threads::Threads)
 # target_link_libraries(RaycastTest PRIVATE ${OpenCV_LIBS} ${ZeroMQ_LIBRARIES} Threads::Threads)
 # target_link_libraries(SpatialTest PRIVATE ${OpenCV_LIBS} ${ZeroMQ_LIBRARIES} Threads::Threads)
 # target_link_libraries(TimeTest PRIVATE ${OpenCV_LIBS} ${ZeroMQ_LIBRARIES} Threads::Threads)
@@ -16,8 +18,10 @@
 # target_link_libraries(FusionTest PRIVATE ${OpenCV_LIBS} ${ZeroMQ_LIBRARIES} Threads::Threads)
 # target_link_libraries(KalmanTest PRIVATE ${OpenCV_LIBS} ${ZeroMQ_LIBRARIES} Threads::Threads)
 
-# set_target_properties(InputTest PROPERTIES
-#     RUNTIME_OUTPUT_DIRECTORY ${EXECUTABLE_OUTPUT_PATH}/test)
+set_target_properties(InputTest PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${EXECUTABLE_OUTPUT_PATH}/test)
+set_target_properties(ZeroMQTest PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${EXECUTABLE_OUTPUT_PATH}/test)
 # set_target_properties(RaycastTest PROPERTIES
 #     RUNTIME_OUTPUT_DIRECTORY ${EXECUTABLE_OUTPUT_PATH}/test)
 # set_target_properties(SpatialTest PROPERTIES
