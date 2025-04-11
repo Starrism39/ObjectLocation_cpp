@@ -85,6 +85,7 @@ Eigen::Vector3d getRay(const std::vector<double> &pixel,
 
     // 计算相机坐标系下的点
     Eigen::Vector3d p_cam = K_inv * pixel_homogeneous;
+    // std::cout << "p_cam: " << p_cam[0] << " " << p_cam[1] << " " << p_cam[2] << std::endl;
 
     // 畸变校正
     p_cam = undistort_pixel_coords(p_cam, distortion_coeffs);

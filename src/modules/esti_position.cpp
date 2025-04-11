@@ -66,7 +66,7 @@ EstiPosition::EstiPosition(bool is_multi_map,
                            int block_num,
                            double overlap_x_scale,
                            double overlap_y_scale)
-    : Location::Location("EstiPosition", max_queue_length),
+    : Location::Location("\nEstiPosition", max_queue_length),
       is_multi_map(is_multi_map),
       order(order),
       default_height(default_height),
@@ -120,7 +120,7 @@ std::vector<double> EstiPosition::getPoint(const Package &data)
     Eigen::Vector3d t = pose.t;
 
     // 从像素点获取射线
-    Eigen::Vector3d ray = -getRay(data.getCenterPoint(), K_inv, D, R);
+    Eigen::Vector3d ray = getRay(data.getCenterPoint(), K_inv, D, R);
 
     if (is_multi_map)
     {
@@ -138,8 +138,8 @@ std::vector<double> EstiPosition::getPoint(const Package &data)
         // 单尺度地图实现
         glm::vec3 source(t.x(), t.y(), t.z());
         glm::vec3 direction(ray.x(), ray.y(), ray.z());
-        std::cout << "t: " << t[0] << " " << t[1] << " " << t[2] << std::endl;
-        std::cout << "ray: " << ray[0] << " " << ray[1] << " " << ray[2] << std::endl;
+        // std::cout << "t: " << t[0] << " " << t[1] << " " << t[2] << std::endl;
+        // std::cout << "ray: " << ray[0] << " " << ray[1] << " " << ray[2] << std::endl;
 
         std::vector<RaycastHit> result = raycast(source, direction, mesh_data, num_triangles);
         // std::cout << "num_triangles: " << num_triangles << std::endl;
@@ -147,9 +147,10 @@ std::vector<double> EstiPosition::getPoint(const Package &data)
 
         if (result.empty())
         {
-            // 无交点，使用默认高度
-            double l = (default_height - t.z()) / -ray.z();
-            Eigen::Vector3d inter_point = t - l * ray;
+            // 无交点，使用默认深度
+            // double l = (default_height - t.z()) / -ray.z();
+            // Eigen::Vector3d inter_point = t - l * ray;
+            Eigen::Vector3d inter_point = t - data.dp->get_laser_distance() * ray;
 
             return {inter_point.x(), inter_point.y(), inter_point.z()};
         }
@@ -200,9 +201,10 @@ std::vector<double> EstiPosition::getPointFormUavObjectPoint(const Package &data
 
         if (result.empty())
         {
-            // 无交点，使用默认高度
-            double l = (default_height - p_camera.z()) / -ray.z();
-            Eigen::Vector3d inter_point = p_camera - l * ray;
+            // 无交点，使用默认深度
+            // double l = (default_height - p_camera.z()) / -ray.z();
+            // Eigen::Vector3d inter_point = p_camera - l * ray;
+            Eigen::Vector3d inter_point = p_camera - data.dp->get_laser_distance() * ray;
 
             return {inter_point.x(), inter_point.y(), inter_point.z()};
         }
@@ -231,12 +233,12 @@ void EstiPosition::process(Package &data)
         data.location = getPointFormUavObjectPoint(data);
     }
 
-    // 检查位置是否在默认高度，如果是则清除目标向量
-    if (data.location.size() >= 3 && std::abs(data.location[2] - default_height) < 1e-6)
-    {
-        data.location = data.uav_utm;
-        // data.location.clear();
-    }
+    // // 检查位置是否在默认高度，如果是则清除目标向量
+    // if (data.location.size() >= 3 && std::abs(data.location[2] - default_height) < 1e-6)
+    // {
+    //     data.location = data.uav_utm;
+    //     // data.location.clear();
+    // }
 
     // 极端值的调试输出
     if (data.location.size() >= 1 && std::abs(data.location[0]) > 1000)

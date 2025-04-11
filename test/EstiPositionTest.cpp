@@ -49,7 +49,7 @@ int main()
     Package test_pkg;
 
     // 填充相机参数 (示例值，需根据实际数据调整)
-    test_pkg.camera_pose = {0, -90.0 * M_PI / 180.0, 0.0, 224.0, -60.0, 50.0};    // [yaw, pitch, roll, x, y, z]
+    test_pkg.camera_pose = {0, -30, 180.0, 224.0, -60.0, 50.0};    // [yaw, pitch, roll, x, y, z]
     test_pkg.camera_K = {1000.0, 1000.0, 960.0, 540.0};              // [fx, fy, cx, cy]
     test_pkg.camera_distortion = {0.0, 0.0, 0.0, 0.0, 0.0}; // [k1, k2, p1, p2, k3]
     const double bbox_width = 0.01;  // 归一化宽度

@@ -22,13 +22,13 @@
 #include <memory>
 #include <cstdint>
 #include <opencv2/opencv.hpp>
-#include "input/data_object.h"
+#include "framework/data_object.h"
 
 //  0电视: 1280x1080
 //  1红外: 640x512
 //  2微光: 1280x1080
-// const int img_size[3][2] = {{1280, 1080}, {640, 512}, {1280, 1080}};
-const int img_size[3][2] = {{1920, 1080}, {1920, 1080}, {1920, 1080}};
+const int img_size[3][2] = {{1280, 1080}, {640, 512}, {1280, 1080}};
+// const int img_size[3][2] = {{1920, 1080}, {1920, 1080}, {1920, 1080}};
 
 struct Bbox
 {
@@ -43,11 +43,11 @@ struct ObjectInfo
 {
     /* data */
     uint8_t uid;
-    uint16_t tracker_id; // 填入tracker_id
-    Bbox rect;           // 填入Bbox
+    uint16_t tracker_id;
+    Bbox rect;
     float prob;
-    uint8_t label;   // 填入class_id
-    double wgs84[3]; // 经纬度；填入location
+    uint8_t label;
+    double wgs84[3]; // 经纬度
 };
 
 // 相机矩阵，6个double，48byte
@@ -61,15 +61,15 @@ typedef union
         double yaw;
         double pitch;
         double roll;
-    } member; // 填入camera_pose
+    } member;
     uint8_t data[48];
 } CameraMatrix;
 
 // 帧头，8bit
 struct CameraInfo
 {
-    uint8_t uav_id;      // 有效低4bit, 无人机id, 0-15；填入uav_id
-    uint8_t camera_type; // 有效低2bit, 相机类型, 0:电视 1:红外 2:微光；填入camera_id
+    uint8_t uav_id;      // 有效低4bit, 无人机id, 0-15
+    uint8_t camera_type; // 有效低2bit, 相机类型, 0:电视 1:红外 2:微光
     CameraMatrix cm;     // 相机矩阵
 };
 
@@ -84,19 +84,25 @@ typedef union
 class DataPackage : public GryFlux::DataObject
 {
 public:
-    DataPackage() = default;
-    ~DataPackage() = default;
+    DataPackage() : align_bits_(3)
+    {
+        this->clear();
+    };
+    ~DataPackage() {};
 
     // 机上
     // 源
-    void set_timestamp(uint64_t timestamp);                                                  // 设置时间戳
+    void set_timestamp(uint64_t timestamp); // 设置时间戳
+    void set_camera_info(const uint8_t uav_id, const uint8_t camera_type, const uint8_t *cm_data);
     void set_camera_info(const uint8_t uav_id, const uint8_t camera_type, const double *cm); // 设置相机信息
+    void set_laser_distance(float laser_distance);                                           // 设置激光距离
 
     // 目标检测
     void set_obj_num(uint8_t obj_num);            // 设置目标数量
     void push_object_info(const ObjectInfo &obj); // 添加目标信息
     // xfeat
-    void set_homography(const float *h); // 设置单应矩阵
+    void set_homography(const uint8_t *h); // 设置单应矩阵
+    void set_homography(const float *h);   // 设置单应矩阵
 
     // encoder
     void set_imgcode(const uint8_t *img_code, const size_t len);      // 设置图像码流
@@ -126,6 +132,7 @@ public:
     CameraMatrix get_camera_matrix() const;          // 获取相机矩阵， location
     uint8_t get_obj_num() const;                     // 获取目标数量， location，decoder，dispaly
     std::vector<ObjectInfo> get_object_info() const; // 获取目标信息， location，decoder，dispaly
+    float get_laser_distance() const;                // 获取激光距离， location
 
     // send module(包含熵编码的encoder)
     const uint8_t *get_stream() const;
@@ -138,38 +145,40 @@ public:
     const uint8_t *get_background() const;
     const size_t get_background_length() const;
 
+    void clear(); // 清空数据
 private:
+    const uint32_t align_bits_; // 对齐位数
+
     cv::Mat rgb_;
     cv::Mat ir_;
     cv::Mat lowlight_;
 
-    uint64_t timestamp_;     // 时间戳；本模块需要的值，填入time
+    uint64_t timestamp_;     // 时间戳
     Homography homography_;  // 单应矩阵
-    CameraInfo camera_info_; // 相机矩阵；本模块需要的值
+    CameraInfo camera_info_; // 相机矩阵
     bool key_frame_;         // 关键帧
+    float laser_distance_;   // 激光距离
 
-    uint8_t obj_num_;                     // 目标数量；本模块需要的值
-    std::vector<ObjectInfo> object_info_; // 目标信息；本模块需要的值
+    uint8_t obj_num_;                     // 目标数量
+    std::vector<ObjectInfo> object_info_; // 目标信息
 
-    size_t stream_len_;                 // 码流长度
+    size_t stream_len_ = 0;             // 码流长度
     std::unique_ptr<uint8_t[]> stream_; // 码流
 
-    size_t imgcode_len_;                 // 图像码流长度
+    size_t imgcode_len_ = 0;             // 图像码流长度
     std::unique_ptr<uint8_t[]> imgcode_; // 图像码流
 
-    size_t foreground_len_;                 // 前景长度
+    size_t foreground_len_ = 0;             // 前景长度
     std::unique_ptr<uint8_t[]> foreground_; // 前景
 
-    size_t background_len_;                 // 背景长度
+    size_t background_len_ = 0;             // 背景长度
     std::unique_ptr<uint8_t[]> background_; // 背景
 
 private:
-    void clear();                             // 清空数据
-    Bbox align_bbox(const Bbox bbox) const;   //  xywh坐标对齐4
-    Bbox unalign_bbox(const Bbox bbox) const; //  xywh坐标解对齐
+    Bbox quant_bbox(const Bbox bbox, const uint32_t align_bits = 3) const;   //  xywh坐标量化
+    Bbox align_bbox(const Bbox bbox, const uint32_t align_bits = 3) const;   //  xywh坐标对齐,默认值为3，即对齐到8
+    Bbox unalign_bbox(const Bbox bbox, const uint32_t align_bits = 3) const; //  xywh坐标解对齐
 
     void pack_objinfo(const ObjectInfo &obj, uint8_t *data);
     void unpack_objinfo(const uint8_t *data, ObjectInfo &obj);
 };
-
-void printObjectInfo(const std::shared_ptr<DataPackage> &data);

@@ -16,6 +16,15 @@ input:
 
   stage1:
     idx: 1
+    name: "ZeroMQ"
+    args:
+      endpoint1: "ipc:///tmp/zmq-test0"
+      endpoint2: "ipc:///tmp/zmq-test1"
+      topic: "land_stream"
+
+
+  stage2:
+    idx: 2
     name: "DataConvert"
     args:
       max_queue_length: *max_queue_length

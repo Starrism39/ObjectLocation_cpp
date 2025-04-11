@@ -1,7 +1,7 @@
 #pragma once
 
 #include "framework/module.h"
-#include "input/package.h"
+#include "framework/package.h"
 #include <vector>
 #include <string>
 #include <thread>

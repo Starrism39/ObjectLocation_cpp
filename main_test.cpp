@@ -6,16 +6,16 @@
 
 #include "framework/pipeline.h"
 
-// TODO：输入、输出
-#include "modules/converter.h"
+
+#include "input/converter.h"
 
 #include "modules/time_filter.h"
 #include "modules/esti_position.h"
 #include "modules/spatial_filter.h"
 
-#include "modules/fusion.h"
-#include "modules/kalman.h"
-#include "modules/output.h"
+#include "output/fusion.h"
+#include "output/kalman.h"
+#include "output/output.h"
 
 // 创建测试用的ObjectInfo
 ObjectInfo CreateTestObject(uint8_t uid, uint16_t tracker_id, uint8_t label,
@@ -72,6 +72,9 @@ std::shared_ptr<DataPackage> CreateTestDatapackage(uint64_t timestamp, uint8_t u
 
     // 设置时间戳
     data_pkg->set_timestamp(timestamp);
+
+    // 设置激光深度
+    data_pkg->set_laser_distance(50.0);
 
     // 设置相机信息
     double camera_matrix[6] = {

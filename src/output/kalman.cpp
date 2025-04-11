@@ -2,7 +2,7 @@
 #include <opencv2/video/tracking.hpp>
 #include <map>
 #include <unordered_set>
-#include "modules/kalman.h"
+#include "output/kalman.h"
 
 Kalman::Kalman(const std::string &name,
                double time_slice,
@@ -16,7 +16,7 @@ Kalman::Kalman(const std::string &name,
                                         sigma_a(sigma_a),
                                         maxQueueLength(maxQueueLength)
 {
-    std::cout << "Building " << name << std::endl;
+    std::cout << "\nBuilding " << name << std::endl;
     auto OutputLock = std::make_shared<std::mutex>();
     auto OutputQueue = std::make_shared<TimePriorityQueue<OutPackage>>();
     setOutputLock(OutputLock);
@@ -67,10 +67,10 @@ void Kalman::process()
 
         OutPackage outpkg = kalman(packages, sigma_a);
 
-        // 打印处理结果
-        std::cout << std::string(3, '\n');
-        std::cout << "==================== kalman ====================" << std::endl;
-        std::cout << "kalman处理后的一个OutPackage有 " << outpkg.objs.size() << " 个目标" << std::endl;
+        // // 打印处理结果
+        // std::cout << std::string(3, '\n');
+        // std::cout << "==================== kalman ====================" << std::endl;
+        // std::cout << "kalman处理后的一个OutPackage有 " << outpkg.objs.size() << " 个目标" << std::endl;
 
         // 等待输出队列有空间
         while (outputQueue->isFull())
@@ -79,8 +79,8 @@ void Kalman::process()
         }
 
         outputLock->lock();
-        // 打印每个包的信息
-        printOutPackage(outpkg);
+        // // 打印每个包的信息
+        // printOutPackage(outpkg);
         outputQueue->push(outpkg);
         outputLock->unlock();
     }

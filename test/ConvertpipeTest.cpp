@@ -7,7 +7,7 @@
 
 #include "framework/pipeline.h"
 
-#include "modules/converter.h"
+#include "input/converter.h"
 
 // 创建测试用的ObjectInfo
 ObjectInfo CreateTestObject(uint8_t uid, uint16_t tracker_id,

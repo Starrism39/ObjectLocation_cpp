@@ -74,7 +74,7 @@ Module::Module(const std::string &name, size_t maxQueueLength)
       maxQueueLength(maxQueueLength),
       isRunning(true)
 {
-    std::cout << "Building " << name << std::endl;
+    std::cout << "\nBuilding " << name << std::endl;
 }
 
 void Module::setInputLock(std::shared_ptr<std::mutex> lock)

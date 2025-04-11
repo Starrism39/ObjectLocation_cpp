@@ -4,7 +4,7 @@
 #include <iomanip>
 #include <memory>
 
-#include "modules/fusion.h"
+#include "output/fusion.h"
 
 void test_fusion()
 {

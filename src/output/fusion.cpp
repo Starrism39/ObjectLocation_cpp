@@ -1,5 +1,5 @@
 #include <opencv2/imgcodecs.hpp>
-#include "modules/fusion.h"
+#include "output/fusion.h"
 
 Fusion::Fusion(const std::string &name,
                double time_slice,
@@ -11,7 +11,7 @@ Fusion::Fusion(const std::string &name,
                                         inputLock(std::move(inputLock)),
                                         maxQueueLength(maxQueueLength)
 {
-    std::cout << "Building " << name << std::endl;
+    std::cout << "\nBuilding " << name << std::endl;
     auto OutputLock = std::make_shared<std::mutex>();
     auto OutputQueue = std::make_shared<TimePriorityQueue<OutPackage>>();
     setOutputLock(OutputLock);

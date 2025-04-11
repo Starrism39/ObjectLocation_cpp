@@ -1,31 +1,33 @@
-/*************************************************************************************************************************
- * Copyright 2025 Grifcc
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the “Software”), to deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *************************************************************************************************************************/
-#include "input/package.h"
+#include "framework/package.h"
+#include "utils/two_byte_float.h"
 
 void DataPackage::set_timestamp(uint64_t timestamp)
 {
     this->timestamp_ = timestamp;
 }
 
+void DataPackage::set_camera_info(const uint8_t uav_id, const uint8_t camera_type, const uint8_t *cm_data)
+{
+    this->camera_info_.uav_id = uav_id;
+    this->camera_info_.camera_type = camera_type;
+    memcpy(this->camera_info_.cm.data, cm_data, sizeof(uint8_t) * 48);
+}
+
 void DataPackage::set_camera_info(const uint8_t uav_id, const uint8_t camera_type, const double *cm)
 {
     this->camera_info_.uav_id = uav_id;
     this->camera_info_.camera_type = camera_type;
-    memcpy(this->camera_info_.cm.data, cm, sizeof(double) * 6);
+    this->camera_info_.cm.member.x = cm[0];
+    this->camera_info_.cm.member.y = cm[1];
+    this->camera_info_.cm.member.z = cm[2];
+    this->camera_info_.cm.member.yaw = cm[3];
+    this->camera_info_.cm.member.pitch = cm[4];
+    this->camera_info_.cm.member.roll = cm[5];
+}
+
+void DataPackage::set_laser_distance(float laser_distance)
+{
+    this->laser_distance_ = laser_distance;
 }
 
 void DataPackage::set_obj_num(uint8_t obj_num)
@@ -35,12 +37,29 @@ void DataPackage::set_obj_num(uint8_t obj_num)
 
 void DataPackage::push_object_info(const ObjectInfo &obj)
 {
-    this->object_info_.push_back(obj);
+    // 量化bbox
+    auto quanted_bbox = this->quant_bbox(obj.rect, this->align_bits_);
+    ObjectInfo quanted_obj;
+    quanted_obj.uid = obj.uid;
+    quanted_obj.tracker_id = obj.tracker_id;
+    quanted_obj.rect = quanted_bbox;
+    quanted_obj.prob = obj.prob;
+    quanted_obj.label = obj.label;
+    quanted_obj.wgs84[0] = obj.wgs84[0];
+    quanted_obj.wgs84[1] = obj.wgs84[1];
+    quanted_obj.wgs84[2] = obj.wgs84[2];
+
+    this->object_info_.push_back(quanted_obj);
+}
+
+void DataPackage::set_homography(const uint8_t *h_data)
+{
+    memcpy(this->homography_.data, h_data, sizeof(uint8_t) * 36);
 }
 
 void DataPackage::set_homography(const float *h)
 {
-    memcpy(this->homography_.data, h, sizeof(float) * 9);
+    memcpy(this->homography_.h, h, sizeof(float) * 9);
 }
 
 void DataPackage::set_imgcode(const uint8_t *img_code, const size_t len)
@@ -110,12 +129,13 @@ void DataPackage::encoder_stream()
     // compress_stream(this->background_,this->background_len_,encodered_background, encodered_background_len)
 
     // 2. 初始化空间
-    this->stream_len_ = 8 + 1 + 36 + 48 + 1 + this->obj_num_ * 7 + 2; //  信息体 : 时间8B +
-                                                                      //  相机信息1B(无人机ID 4bit+相机类型2bit+帧类型2bit)
-                                                                      //  H矩阵36B+相机绝对位姿48B
-                                                                      //  目标数量1B
-                                                                      //  目标信息 7*目标数量B
-                                                                      //  背景大小2B
+    this->stream_len_ = 8 + 1 + 36 + 48 + 2 + 1 + this->obj_num_ * 7 + 2 + background_len_ + foreground_len_; //  信息体 : 时间8B +
+                                                                                                              //  相机信息1B(无人机ID 4bit+相机类型2bit+帧类型2bit)
+                                                                                                              //  H矩阵36B+相机绝对位姿48B
+                                                                                                              //  激光距离2B
+                                                                                                              //  目标数量1B
+                                                                                                              //  目标信息 7*目标数量B
+                                                                                                              //  背景大小2B
     //  this->stream_len_ += encoder_background_len;
     //  this->stream_len_ += encoder_foreground_len;
     this->stream_ = std::make_unique<uint8_t[]>(this->stream_len_);
@@ -140,6 +160,12 @@ void DataPackage::encoder_stream()
     memcpy(this->stream_.get() + offset, this->camera_info_.cm.data, sizeof(CameraMatrix));
     offset += sizeof(CameraMatrix);
 
+    // 激光距离
+    TwoByteFloat laser_distance(this->laser_distance_);
+    uint16_t laser_distance_raw = laser_distance.getRawValue();
+    memcpy(this->stream_.get() + offset, &laser_distance_raw, 2);
+    offset += 2;
+
     // 目标数量
     memcpy(this->stream_.get() + offset, &this->obj_num_, 1);
     offset += 1;
@@ -157,12 +183,12 @@ void DataPackage::encoder_stream()
     offset += 2;
 
     // 背景
-    //  memcpy(stream + offset, encodered_background, 2);
-    // offset += encodered_background_len;
+    memcpy(stream_.get() + offset, background_.get(), background_len_);
+    offset += background_len_;
 
     // 前景
-    //  memcpy(stream + offset, encodered_foreground, 2);
-    // offset += encodered_foreground_len;
+    memcpy(stream_.get() + offset, foreground_.get(), foreground_len_);
+    offset += foreground_len_;
 }
 
 void DataPackage::parse_stream(uint8_t *stream, const size_t len)
@@ -189,6 +215,12 @@ void DataPackage::parse_stream(uint8_t *stream, const size_t len)
     memcpy(this->camera_info_.cm.data, stream + offset, sizeof(CameraMatrix));
     offset += sizeof(CameraMatrix);
 
+    // 激光距离
+    uint16_t laser_distance_raw;
+    memcpy(&laser_distance_raw, stream + offset, 2);
+    this->laser_distance_ = TwoByteFloat(laser_distance_raw).toFloat();
+    offset += 2;
+
     // 目标数量
     memcpy(&this->obj_num_, stream + offset, 1);
     offset += 1;
@@ -207,14 +239,17 @@ void DataPackage::parse_stream(uint8_t *stream, const size_t len)
     memcpy(&background_len, stream + offset, 2);
     this->background_len_ = background_len;
     offset += 2;
+    this->foreground_len_ = len - offset - background_len;
+    this->foreground_ = std::make_unique<uint8_t[]>(this->foreground_len_);
+    this->background_ = std::make_unique<uint8_t[]>(this->background_len_);
 
     // 背景
-    //  memcpy(encodered_background, stream + offset, 2);
-    // offset += encodered_background_len;
+    memcpy(background_.get(), stream + offset, background_len_);
+    offset += background_len_;
 
     // 前景
-    //  memcpy(encodered_foreground, stream + offset, 2);
-    // offset += encodered_foreground_len;
+    memcpy(foreground_.get(), stream + offset, foreground_len_);
+    offset += foreground_len_;
 }
 
 uint64_t DataPackage::get_timestamp() const
@@ -255,6 +290,11 @@ uint8_t DataPackage::get_obj_num() const
 std::vector<ObjectInfo> DataPackage::get_object_info() const
 {
     return this->object_info_;
+}
+
+float DataPackage::get_laser_distance() const
+{
+    return this->laser_distance_;
 }
 
 const uint8_t *DataPackage::get_stream() const
@@ -303,6 +343,7 @@ void DataPackage::clear()
     this->camera_info_.camera_type = 0;
     this->camera_info_.cm = {0};
     this->obj_num_ = 0;
+    this->laser_distance_ = 0;
     this->object_info_.clear();
     this->homography_ = {0};
     this->foreground_.reset();
@@ -314,32 +355,48 @@ void DataPackage::clear()
     this->lowlight_.release();
 }
 
+Bbox DataPackage::quant_bbox(const Bbox bbox, const uint32_t align_bits) const
+{
+    uint32_t align_mask = (1 << align_bits) - 1;
+    Bbox quanted_bbox;
+
+    // 将坐标向下对齐到2^align_bits的倍数
+    quanted_bbox.x = bbox.x & ~align_mask;
+    quanted_bbox.y = bbox.y & ~align_mask;
+
+    // 将宽高向上对齐到2^align_bits的倍数
+    quanted_bbox.w = ((bbox.w + align_mask) & ~align_mask);
+    quanted_bbox.h = ((bbox.h + align_mask) & ~align_mask);
+
+    return quanted_bbox;
+}
 // TODO: implement SIMD optimization
-Bbox DataPackage::align_bbox(const Bbox bbox) const
+Bbox DataPackage::align_bbox(const Bbox bbox, const uint32_t align_bits) const
 {
     Bbox aligned_bbox;
-    aligned_bbox.x = (bbox.x & ~(4 - 1)) >> 2;
-    aligned_bbox.y = (bbox.y & ~(4 - 1)) >> 2;
-    aligned_bbox.w = ((bbox.w + 3) & ~3) >> 2;
-    aligned_bbox.h = ((bbox.h + 3) & ~3) >> 2;
+    aligned_bbox.x = bbox.x >> align_bits;
+    aligned_bbox.y = bbox.y >> align_bits;
+    aligned_bbox.w = bbox.w >> align_bits;
+    aligned_bbox.h = bbox.h >> align_bits;
+
     return aligned_bbox;
 }
 
 // TODO: implement SIMD optimization
-Bbox DataPackage::unalign_bbox(const Bbox aligned_bbox) const
+Bbox DataPackage::unalign_bbox(const Bbox aligned_bbox, const uint32_t align_bits) const
 {
     Bbox bbox;
-    bbox.x = aligned_bbox.x << 2;
-    bbox.y = aligned_bbox.y << 2;
-    bbox.w = aligned_bbox.w << 2;
-    bbox.h = aligned_bbox.h << 2;
+    bbox.x = aligned_bbox.x << align_bits;
+    bbox.y = aligned_bbox.y << align_bits;
+    bbox.w = aligned_bbox.w << align_bits;
+    bbox.h = aligned_bbox.h << align_bits;
     return bbox;
 }
 
 void DataPackage::pack_objinfo(const ObjectInfo &obj, uint8_t *data)
 {
     // 对齐bbox
-    auto aligned_rect = this->align_bbox(obj.rect);
+    auto aligned_rect = this->align_bbox(obj.rect, this->align_bits_);
 
     // 确保初始化为0
     std::fill_n(data, 7, 0);
@@ -384,46 +441,5 @@ void DataPackage::unpack_objinfo(const uint8_t *data, ObjectInfo &obj)
     aligned_rect.y = (data[3] << 2) | ((data[6] >> 4) & 0x3);
     aligned_rect.w = (data[4] << 2) | ((data[6] >> 2) & 0x3);
     aligned_rect.h = (data[5] << 2) | (data[6] & 0x3);
-    obj.rect = this->unalign_bbox(aligned_rect);
-}
-
-void printObjectInfo(const std::shared_ptr<DataPackage> &data)
-{
-    if (!data)
-    {
-        std::cout << "DataPackage is null" << std::endl;
-        return;
-    }
-
-    uint8_t obj_num = data->get_obj_num();
-    std::cout << "Total objects: " << static_cast<int>(obj_num) << std::endl;
-
-    if (obj_num == 0)
-    {
-        std::cout << "No objects detected." << std::endl;
-        return;
-    }
-
-    std::cout << "TimeStamp: " << data->get_timestamp() << std::endl;
-    std::cout << "uav id: " << static_cast<int>(data->get_uav_id()) << std::endl;
-    std::cout << "obj nums are " << static_cast<int>(data->get_obj_num()) << std::endl;
-
-    std::vector<ObjectInfo> objects = data->get_object_info();
-
-    for (size_t i = 0; i < objects.size(); ++i)
-    {
-        const auto &obj = objects[i];
-        std::cout << "Object " << i + 1 << ":" << std::endl;
-        std::cout << "  Bbox: x=" << obj.rect.x
-                  << ", y=" << obj.rect.y
-                  << ", w=" << obj.rect.w
-                  << ", h=" << obj.rect.h << std::endl;
-        std::cout << "  Class ID: " << static_cast<int>(obj.label) << std::endl;
-        std::cout << "  Global ID: " << static_cast<int>(obj.uid) << std::endl;
-        std::cout << "  Score: " << obj.prob << std::endl;
-        std::cout << "  wgs84: " << obj.wgs84[0]
-                  << ", " << obj.wgs84[1]
-                  << ", " << obj.wgs84[2] << std::endl;
-        std::cout << std::endl;
-    }
+    obj.rect = this->unalign_bbox(aligned_rect, this->align_bits_);
 }

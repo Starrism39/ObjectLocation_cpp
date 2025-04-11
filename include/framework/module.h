@@ -9,7 +9,7 @@
 #include <atomic>
 #include <iostream>
 
-#include "input/package.h"
+#include "framework/package.h"
 
 // Package类用于存储检测和跟踪信息
 class Package {
@@ -94,18 +94,18 @@ public:
         while (it != queue.end() && it->time >= element.time) {
             ++it;
         }
-        queue.insert(it, element);
+        queue.insert(it, std::move(element));
         return 0;
     }
      
     T pop() {
         if (isEmpty()) throw std::runtime_error("TimePriorityQueue is empty");
-        T element = queue.back();
+        T element = std::move(queue.back()); 
         queue.pop_back();
         return element;
     }
      
-    T peek() {
+    const T& peek() const {
         if (isEmpty()) throw std::runtime_error("TimePriorityQueue is empty");
         return queue.back();
     }

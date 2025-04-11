@@ -1,4 +1,4 @@
-#include "modules/converter.h"
+#include "input/converter.h"
 #include <stdexcept>
 #include <cmath>
 
@@ -9,7 +9,7 @@ PackageConverter::PackageConverter(const std::string &name,
                                                            inputQueue(std::move(input_queue)),
                                                            inputLock(std::move(input_lock))
 {
-    std::cout << "Building " << name << std::endl;
+    std::cout << "\nBuilding " << name << std::endl;
     this->outputLock = std::make_shared<std::mutex>();
     this->outputQueue = std::make_shared<TimePriorityQueue<Package>>();
     if (max_queue_length > 0 && outputQueue)
@@ -52,8 +52,18 @@ std::vector<double> PackageConverter::GetCameraIntrinsics(int camera_type)
 
 std::vector<double> PackageConverter::GetCameraDistortion(int camera_type)
 {
-    // 示例畸变参数，实际使用时需要根据相机标定结果设置
-    return {0.01, -0.02, 0.001, 0.002, 0.005}; // k1, k2, p1, p2, k3
+    switch (camera_type)
+    {
+    case 0:                                    // 电视相机
+        return {0.01, -0.02, 0.001, 0.002, 0.005}; // k1, k2, p1, p2, k3
+    case 1:                                    // 红外相机
+        return {0, 0, 0, 0, 0};
+    case 2:                                    // 微光相机
+        return {0, 0, 0, 0, 0};
+    default:
+        throw std::runtime_error("未知的相机类型");
+    }
+    
 }
 
 std::vector<double> PackageConverter::PoseToUtm(const std::vector<double> &camera_pose, const std::vector<double> &norm_Bbox, const std::vector<double> &camera_K)

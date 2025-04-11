@@ -1,5 +1,5 @@
 #include <cstring>
-#include "modules/output.h"
+#include "output/output.h"
 #include "utils/protocol.h"
 
 Output::Output(const std::string &name,
@@ -12,7 +12,7 @@ Output::Output(const std::string &name,
                                                         inputLock(std::move(inputLock)),
                                                         ip(ip)
 {
-    std::cout << "Building " << name << std::endl;
+    std::cout << "\nBuilding " << name << std::endl;
     this->server = std::make_shared<UDPOperation>(ip.c_str(), port, interface.c_str());
     this->server->create_server();
 }

@@ -78,6 +78,18 @@ if(NOT  CMAKE_INSTALL_PREFIX)
 endif()
 message(STATUS "CMAKE_INSTALL_PREFIX :${CMAKE_INSTALL_PREFIX}")
 
+# ZeroMQ
+find_package(ZeroMQ QUIET)
+ if(NOT ZeroMQ_FOUND)
+     # 如果find_package不能找到ZeroMQ，尝试使用pkg-config
+     find_package(PkgConfig)
+     if(PkgConfig_FOUND)
+         pkg_check_modules(ZeroMQ libzmq)
+     endif()
+ endif()
+ if(NOT ZeroMQ_FOUND)
+     message(STATUS "ZeroMQ package not found, assuming ZeroMQ library is installed in system directories")
+ endif()
 
 # Eigen
 include_directories("/usr/include/eigen3")
@@ -109,11 +121,17 @@ aux_source_directory(${PROJECT_SOURCE_DIR}/src/modules DET_SRC_DIR)
 aux_source_directory(${PROJECT_SOURCE_DIR}/src/utils DET_SRC_DIR)
 aux_source_directory(${PROJECT_SOURCE_DIR}/src/framework DET_SRC_DIR)
 aux_source_directory(${PROJECT_SOURCE_DIR}/src/input DET_SRC_DIR)
+aux_source_directory(${PROJECT_SOURCE_DIR}/src/output DET_SRC_DIR)
 
 add_subdirectory(test/)
 
 
-add_executable(main_test main_test.cpp ${DET_SRC_DIR})
-target_link_libraries(main_test PRIVATE ${OpenCV_LIBS} Threads::Threads yaml-cpp)
-set_target_properties(main_test PROPERTIES
+# add_executable(main_test main_test.cpp ${DET_SRC_DIR})
+# target_link_libraries(main_test PRIVATE ${OpenCV_LIBS} ${ZeroMQ_LIBRARIES} Threads::Threads yaml-cpp)
+# set_target_properties(main_test PROPERTIES
+#     RUNTIME_OUTPUT_DIRECTORY ${EXECUTABLE_OUTPUT_PATH}/bin)
+
+add_executable(main main.cpp ${DET_SRC_DIR})
+target_link_libraries(main PRIVATE ${OpenCV_LIBS} ${ZeroMQ_LIBRARIES} Threads::Threads yaml-cpp)
+set_target_properties(main PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${EXECUTABLE_OUTPUT_PATH}/bin)
