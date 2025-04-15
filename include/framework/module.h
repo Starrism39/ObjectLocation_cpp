@@ -132,6 +132,22 @@ public:
         return timeSliceList;
     }
 
+    std::vector<T> getTimeSliceNonPop(double timeSlice) {
+        if (isEmpty()) {
+            throw std::runtime_error("TimePriorityQueue is empty");
+        }
+
+        double stopTime = queue.back().time + timeSlice;  // 默认值为最小时间+时间间隔
+
+        // 找到分界点
+        auto splitIt = std::find_if(queue.begin(), queue.end(),
+            [stopTime](const T& element) { return element.time <= stopTime; });
+
+        // 提取时间片段并返回
+        std::vector<T> timeSliceList(splitIt, queue.end());
+        return timeSliceList;
+    }
+
     // 步长为1的滑动窗口
     std::vector<T> getSlidingWindow(double timeSlice) {
         if (isEmpty()) {

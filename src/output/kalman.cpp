@@ -47,36 +47,62 @@ std::shared_ptr<std::mutex> Kalman::getOutputLock() { return this->outputLock; }
 
 std::shared_ptr<TimePriorityQueue<OutPackage>> Kalman::getOutputQueue() { return this->outputQueue; }
 
-void Kalman::process()
-{
-    while (isRunning)
-    {
-        // std::cout << "running kalman" << std::endl;
+void Kalman::process() {
+    bool initialPhase = true;  // 新增初始阶段标志
+
+    while (isRunning) {
         inputLock->lock();
-        if (inputQueue->isEmpty() || inputQueue->deltaTime() < timeSlice + 1)
-        {
+
+        if (inputQueue->isEmpty() || inputQueue->deltaTime() < timeSlice + 1) {
             inputLock->unlock();
             std::this_thread::sleep_for(std::chrono::milliseconds(5));
             continue;
         }
+
+        // 初始阶段处理逻辑
+        if (initialPhase) {
+            std::vector<OutPackage> packages = inputQueue->getTimeSliceNonPop(timeSlice);
+            inputLock->unlock();
+
+            for (int i = packages.size() - 1; i >= 1; --i)
+            {   
+                const auto &package = packages[i];
+                // 打印处理结果
+                std::cout << std::string(3, '\n');
+                std::cout << "==================== kalman ====================" << std::endl;
+                std::cout << "kalman处理后的一个OutPackage有 " << package.objs.size() << " 个目标" << std::endl;
+
+                while (outputQueue->isFull())
+                {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                }
+
+                outputLock->lock();
+                // 打印每个包的信息
+                printOutPackage(package);
+                outputQueue->push(package);
+                outputLock->unlock();
+            }
+            initialPhase = false;
+            continue;
+        }
+
         std::vector<OutPackage> packages = inputQueue->getSlidingWindow(timeSlice);
         inputLock->unlock();
 
-        if (packages.empty())
-            continue;
+        if (packages.empty()) continue;
 
         OutPackage outpkg = kalman(packages, sigma_a);
+
+        // 等待输出队列有空间
+        while (outputQueue->isFull()) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
 
         // 打印处理结果
         std::cout << std::string(3, '\n');
         std::cout << "==================== kalman ====================" << std::endl;
         std::cout << "kalman处理后的一个OutPackage有 " << outpkg.objs.size() << " 个目标" << std::endl;
-
-        // 等待输出队列有空间
-        while (outputQueue->isFull())
-        {
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        }
 
         outputLock->lock();
         // 打印每个包的信息
@@ -85,6 +111,7 @@ void Kalman::process()
         outputLock->unlock();
     }
 }
+
 
 OutPackage Kalman::kalman(std::vector<OutPackage> &pkgs, float sigma_a)
 {
