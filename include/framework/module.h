@@ -30,6 +30,7 @@ public:
     std::string class_name = "";
     int tracker_id = -1;
     std::vector<double> uav_utm;      // UTM坐标
+    int num = 1;      // 当前时间戳、uav_id下的目标数量
     std::shared_ptr<DataPackage> dp;
     
 
@@ -114,6 +115,10 @@ public:
         queue.clear();
     }
      
+    std::list<T>& getQueue(){
+        return queue;
+    }
+
     // 下采样
     std::vector<T> getTimeSlice(double timeSlice) {
         if (isEmpty()) {
@@ -216,7 +221,7 @@ public:
     const_iterator end() const { return queue.end(); }
 
 private:
-    std::list<T> queue;      // 底层容器类型改为 list<T>
+    std::list<T> queue;
     size_t maxCount;
 };
 

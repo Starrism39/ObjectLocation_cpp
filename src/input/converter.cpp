@@ -268,6 +268,9 @@ Package PackageConverter::ConvertSingleObject(const std::shared_ptr<DataPackage>
     // 设置UTM坐标
     pkg.uav_utm = PoseToUtm(pkg.camera_pose, pkg.norm_Bbox, pkg.camera_K);
 
+    // 设置目标数量
+    pkg.num = data_pkg->get_obj_num();
+
     // 设置其他信息
     pkg.uid = obj.uid;
 

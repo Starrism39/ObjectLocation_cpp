@@ -11,10 +11,10 @@ void Filter::run()
     {
         // std::cout << "running spatial_filter" << std::endl;
         inputLock->lock();
-        if (inputQueue->isEmpty() || inputQueue->deltaTime() < timeSlice + 1 || inputQueue->size() < paralle_nums + 1)
+        if (inputQueue->isEmpty() || inputQueue->deltaTime() < timeSlice + 1)
         { // 最后一个判断条件是为了缓解多线程导致的数据乱序问题
             inputLock->unlock();
-            std::this_thread::sleep_for(std::chrono::milliseconds(5));
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
             continue;
         }
         std::vector<Package> packages = inputQueue->getTimeSlice(timeSlice);

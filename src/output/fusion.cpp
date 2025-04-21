@@ -153,7 +153,7 @@ void Fusion::process()
         if (inputQueue->isEmpty() || inputQueue->deltaTime() < timeSlice + 1)
         {
             inputLock->unlock();
-            std::this_thread::sleep_for(std::chrono::milliseconds(5));
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
             continue;
         }
         std::vector<Package> packages = inputQueue->getTimeSlice(timeSlice);
