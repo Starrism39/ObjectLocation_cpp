@@ -91,6 +91,11 @@ find_package(ZeroMQ QUIET)
      message(STATUS "ZeroMQ package not found, assuming ZeroMQ library is installed in system directories")
  endif()
 
+# 手动指定库文件路径
+include_directories(/usr/include)
+link_directories(/usr/lib/x86_64-linux-gnu)  # 添加 libzmq.so 所在目录
+
+
 # Eigen
 include_directories("/usr/include/eigen3")
 
@@ -127,11 +132,11 @@ add_subdirectory(test/)
 
 
 add_executable(main_test main_test.cpp ${DET_SRC_DIR})
-target_link_libraries(main_test PRIVATE ${OpenCV_LIBS} ${ZeroMQ_LIBRARIES} Threads::Threads yaml-cpp)
+target_link_libraries(main_test PRIVATE ${OpenCV_LIBS} zmq Threads::Threads yaml-cpp)
 set_target_properties(main_test PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${EXECUTABLE_OUTPUT_PATH}/bin)
 
 add_executable(main main.cpp ${DET_SRC_DIR})
-target_link_libraries(main PRIVATE ${OpenCV_LIBS} ${ZeroMQ_LIBRARIES} Threads::Threads yaml-cpp)
+target_link_libraries(main PRIVATE ${OpenCV_LIBS} zmq Threads::Threads yaml-cpp)
 set_target_properties(main PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${EXECUTABLE_OUTPUT_PATH}/bin)

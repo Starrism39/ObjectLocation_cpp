@@ -236,3 +236,36 @@ bool NPYReader::ReadMesh(const std::string &filename, std::vector<std::vector<st
         return false;
     }
 }
+
+
+void printMeshData(const std::vector<std::vector<std::vector<float>>>& mesh_data) {
+    std::cout << "===== Mesh Data Structure =====" << std::endl;
+    std::cout << "Total objects: " << mesh_data.size() << "\n\n";
+
+    for (size_t obj_idx = 0; obj_idx < mesh_data.size(); ++obj_idx) {
+        const auto& object = mesh_data[obj_idx];
+        std::cout << "Object " << obj_idx + 1 << "/" << mesh_data.size()
+                  << " (Contains " << object.size() << " faces)\n";
+
+        for (size_t face_idx = 0; face_idx < object.size(); ++face_idx) {
+            const auto& face = object[face_idx];  // 单个面片数据（顶点坐标集合）
+            std::cout << "  Face " << face_idx + 1 << ": ";
+
+            if (face.size() % 3 != 0) {  // 验证顶点数量是否为3的倍数（每个顶点包含xyz）
+                std::cout << "[Invalid Face: " << face.size() << " elements]";
+            } else {
+                std::cout << "[";
+                for (size_t v = 0; v < face.size(); v += 3) {
+                    std::cout << "(" << face[v] << ", " 
+                              << face[v+1] << ", " 
+                              << face[v+2] << ")";
+                    if (v != face.size()-3) std::cout << ", ";
+                }
+                std::cout << "]";
+            }
+            std::cout << "\n";
+        }
+        std::cout << "-----------------------------" << std::endl;
+    }
+    std::cout << "===== End of Data =====" << std::endl;
+}

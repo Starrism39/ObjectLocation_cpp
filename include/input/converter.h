@@ -2,9 +2,12 @@
 
 #include "framework/module.h"
 #include "framework/package.h"
+#include <tuple>
 #include <vector>
 #include <string>
 #include <thread>
+
+std::tuple<double, double, int, double> LLHtoUTM(double lon_deg, double lat_deg, double height);
 
 class PackageConverter
 {
@@ -29,9 +32,13 @@ public:
     // 将DataPackage和ObjectInfo转换为Package
     static std::vector<Package> ConvertToPackages(const std::shared_ptr<DataPackage> &data_pkg);
 
+    // 模拟单个目标
+    static Package Simulation(const std::shared_ptr<DataPackage> data_pkg);
+
 private:
     // 处理线程
     void process();
+
 
     // 将单个ObjectInfo转换为Package
     static Package ConvertSingleObject(const std::shared_ptr<DataPackage> data_pkg, const ObjectInfo &obj);

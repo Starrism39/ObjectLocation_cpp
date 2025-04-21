@@ -6,7 +6,9 @@ void sendFragmented(std::shared_ptr<UDPOperation> server, std::vector<uint8_t>& 
     PacketHeader header;
     header.magic = magic;
     header.total_frags = (data.size() + FRAG_SIZE - 1) / FRAG_SIZE;
+    std::cout << "total frags: " << header.total_frags << std::endl;
     header.data_size = data.size();
+    std::cout << "data size: " << header.data_size << std::endl;
 
     for(uint16_t i=0; i<header.total_frags; ++i) {
         // 构造分片数据包

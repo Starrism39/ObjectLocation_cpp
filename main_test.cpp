@@ -19,7 +19,7 @@
 
 // 创建测试用的ObjectInfo
 ObjectInfo CreateTestObject(uint8_t uid, uint16_t tracker_id, uint8_t label,
-                            float norm_x = 0.5f, float norm_y = 0.5f, float norm_w = 0.2f, float norm_h = 0.3f)
+                            float norm_x = 0.5f, float norm_y = 0.5f, float norm_w = 0.02f, float norm_h = 0.03f)
 {
     // 添加较小的随机偏移（±0.1）
     float random_offset_x = (static_cast<float>(rand()) / RAND_MAX - 0.5f) * 0.2f;
@@ -76,10 +76,16 @@ std::shared_ptr<DataPackage> CreateTestDatapackage(uint64_t timestamp, uint8_t u
     // 设置激光深度
     data_pkg->set_laser_distance(50.0);
 
+    // 设置图像
+    std::string path = "/home/grifcc/xjy/ObjectLocation_cpp/data/received_image.jpg";
+    cv::Mat img = cv::imread(path, cv::IMREAD_GRAYSCALE);
+    data_pkg->set_rgb(img);
+
+
     // 设置相机信息
     double camera_matrix[6] = {
-        500.0, 600.0, 200.0, // x, y, z
-        1.57, 0.0, 0.0       // yaw, pitch, roll
+        34.348630, 109.030844, 357.522242, // x, y, z
+        88.4843, -1.29682, 0.448994       // yaw, pitch, roll
     };
     data_pkg->set_camera_info(uav_id, camera_type, camera_matrix);
 
@@ -353,11 +359,11 @@ int main(int argc, char *argv[])
             }
 
             std::cout << "添加数据包到输入队列，时间戳: " << data_pkg->get_timestamp()
-                      << "，相机类型: " << (data_pkg->get_camera_type() == 0 ? "电视" : data_pkg->get_camera_type() == 1 ? "红外"
-                                                                                                                         : "微光")
-                      << "，目标数量: " << static_cast<int>(data_pkg->get_obj_num()) << std::endl;
+                    << "，相机类型: " << (data_pkg->get_camera_type() == 0 ? "电视" : data_pkg->get_camera_type() == 1 ? "红外"
+                                                                                                                        : "微光")
+                    << "，目标数量: " << static_cast<int>(data_pkg->get_obj_num()) << std::endl;
 
-            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
         }
 
         // 等待处理完成

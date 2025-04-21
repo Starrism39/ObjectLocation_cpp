@@ -1,6 +1,7 @@
 #include "utils/utils.h"
 #include <cmath>
 
+
 CameraPose setCameraPose(const std::vector<double> &camera_pose, const std::string &order)
 {
     // 参数检查
@@ -85,16 +86,20 @@ Eigen::Vector3d getRay(const std::vector<double> &pixel,
 
     // 计算相机坐标系下的点
     Eigen::Vector3d p_cam = K_inv * pixel_homogeneous;
-    // std::cout << "p_cam: " << p_cam[0] << " " << p_cam[1] << " " << p_cam[2] << std::endl;
+    std::cout << "p_cam: " << p_cam[0] << " " << p_cam[1] << " " << p_cam[2] << std::endl;
 
     // 畸变校正
     p_cam = undistort_pixel_coords(p_cam, distortion_coeffs);
+    p_cam = {0, 0, 1};
+    
+    Eigen::Vector3d p_cam_changed = {p_cam[2], -p_cam[0], p_cam[1]};
 
     // 转换到世界坐标系
-    Eigen::Vector3d p_world = rotation * p_cam;
+    Eigen::Vector3d p_world = rotation * p_cam_changed;
+    p_world = p_world.normalized();
 
     // 归一化为单位向量
-    return p_world.normalized();
+    return {p_world[1], p_world[0], -p_world[2]};
 }
 
 Eigen::Vector3d undistort_pixel_coords(const Eigen::Vector3d &p_cam,

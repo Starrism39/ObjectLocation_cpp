@@ -128,7 +128,7 @@ OutPackage Fusion::fusion(std::vector<Package> &pkgs, double timeSlice)
                 cv::Mat raw_img = pkg.dp->get_rgb();
                 
                 if (!raw_img.empty()) {
-                    cv::Mat target_img = cutTarget(raw_img, pkg.Bbox);
+                    cv::Mat target_img = cutTarget(raw_img, {pkg.Bbox[0] - 320, pkg.Bbox[1], pkg.Bbox[2]});
                     int uav_id = std::stoi(pkg.uav_id);
                     // 直接插入到uav_img map
                     obj.uav_img[uav_id] = target_img;

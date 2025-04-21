@@ -1,4 +1,5 @@
 #include <Eigen/Dense>
+#include <tuple>
 #include "utils/npy_reader.h"  // ReadMesh
 
 struct CameraMatrixUtils {
@@ -22,3 +23,4 @@ Eigen::Vector3d getRay(const std::vector<double>& pixel,
                     const Eigen::Matrix3d& rotation);  // 获取从相机像素点出发的射线方向
 std::vector<double> setDistortionCoeffs(const std::vector<double>& distortion_param);  // 设置畸变系数
 CameraPose setCameraPose(const std::vector<double>& camera_pose, const std::string& order = "szxy");  // 设置相机姿态
+

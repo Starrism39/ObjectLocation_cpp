@@ -3,57 +3,6 @@
 
 #include "modules/esti_position.h"
 
-void printMeshData(const std::vector<std::vector<std::vector<float>>> &mesh_data,
-                   int max_layers = 10, // 最大打印层数（防止数据过大）
-                   int max_rows = 5,   // 每层最大行数
-                   int max_cols = 5)
-{ // 每行最大列数
-    std::cout << "Mesh Data ["
-              << mesh_data.size() << " layers]"
-              << std::endl;
-
-    // 遍历每一层
-    for (size_t layer = 0; layer < mesh_data.size() && layer < max_layers; ++layer)
-    {
-        std::cout << "\n── Layer " << layer << " ──\n";
-
-        // 遍历每一行
-        for (size_t row = 0; row < mesh_data[layer].size() && row < max_rows; ++row)
-        {
-            std::cout << "  Row " << row << ": [ ";
-
-            // 遍历每个元素
-            for (size_t col = 0; col < mesh_data[layer][row].size() && col < max_cols; ++col)
-            {
-                std::cout << mesh_data[layer][row][col];
-                if (col != mesh_data[layer][row].size() - 1)
-                    std::cout << ", ";
-            }
-
-            // 如果数据被截断，显示省略号
-            if (mesh_data[layer][row].size() > max_cols)
-                std::cout << ", ...";
-            std::cout << " ]\n";
-        }
-
-        // 如果行数被截断，显示省略信息
-        if (mesh_data[layer].size() > max_rows)
-        {
-            std::cout << "  ... (showing " << max_rows
-                      << "/" << mesh_data[layer].size()
-                      << " rows)\n";
-        }
-    }
-
-    // 如果层数被截断，显示省略信息
-    if (mesh_data.size() > max_layers)
-    {
-        std::cout << "\n... (showing " << max_layers
-                  << "/" << mesh_data.size()
-                  << " layers)\n";
-    }
-}
-
 EstiPosition::EstiPosition(bool is_multi_map,
                            const std::string &mesh_path,
                            double default_height,
@@ -102,8 +51,10 @@ EstiPosition::~EstiPosition()
 }
 
 bool EstiPosition::loadMesh(const std::string &mesh_path)
-{
-    return NPYReader::ReadMesh(mesh_path, mesh_data, num_triangles, vertices_per_triangle, coords_per_vertex);
+{   
+    bool IfLoad = NPYReader::ReadMesh(mesh_path, mesh_data, num_triangles, vertices_per_triangle, coords_per_vertex);
+    return IfLoad;
+    
 }
 
 std::vector<double> EstiPosition::getPoint(const Package &data)
@@ -140,17 +91,16 @@ std::vector<double> EstiPosition::getPoint(const Package &data)
         glm::vec3 direction(ray.x(), ray.y(), ray.z());
         // std::cout << "t: " << t[0] << " " << t[1] << " " << t[2] << std::endl;
         // std::cout << "ray: " << ray[0] << " " << ray[1] << " " << ray[2] << std::endl;
-
         std::vector<RaycastHit> result = raycast(source, direction, mesh_data, num_triangles);
-        // std::cout << "num_triangles: " << num_triangles << std::endl;
-        // printMeshData(mesh_data);
+        std::cout << "num_triangles: " << num_triangles << std::endl;
 
         if (result.empty())
         {
             // 无交点，使用默认深度
-            // double l = (default_height - t.z()) / -ray.z();
-            // Eigen::Vector3d inter_point = t - l * ray;
-            Eigen::Vector3d inter_point = t - data.dp->get_laser_distance() * ray;
+            double l = (default_height - t.z()) / -ray.z();
+            Eigen::Vector3d inter_point = t - l * ray;
+            // Eigen::Vector3d inter_point = t - data.dp->get_laser_distance() * ray;
+            std::cout << "no point out" << std::endl;
 
             return {inter_point.x(), inter_point.y(), inter_point.z()};
         }
@@ -202,9 +152,9 @@ std::vector<double> EstiPosition::getPointFormUavObjectPoint(const Package &data
         if (result.empty())
         {
             // 无交点，使用默认深度
-            // double l = (default_height - p_camera.z()) / -ray.z();
-            // Eigen::Vector3d inter_point = p_camera - l * ray;
-            Eigen::Vector3d inter_point = p_camera - data.dp->get_laser_distance() * ray;
+            double l = (default_height - p_camera.z()) / -ray.z();
+            Eigen::Vector3d inter_point = p_camera - l * ray;
+            // Eigen::Vector3d inter_point = p_camera - data.dp->get_laser_distance() * ray;
 
             return {inter_point.x(), inter_point.y(), inter_point.z()};
         }
@@ -240,23 +190,6 @@ void EstiPosition::process(Package &data)
     //     // data.location.clear();
     // }
 
-    // 极端值的调试输出
-    if (data.location.size() >= 1 && std::abs(data.location[0]) > 1000)
-    {
-        std::cout << "data.camera_pose: "
-                  << data.camera_pose[3] << ", "
-                  << data.camera_pose[4] << ", "
-                  << data.camera_pose[5] << std::endl;
-        std::cout << "data.uav_utm: "
-                  << data.uav_utm[0] << ", "
-                  << data.uav_utm[1] << ", "
-                  << data.uav_utm[2] << std::endl;
-        std::cout << "data.location: "
-                  << data.location[0] << ", "
-                  << data.location[1] << ", "
-                  << data.location[2] << std::endl;
-        std::cout << "data.time: " << data.time << std::endl;
-    }
 
     // 最终回退方案 - 始终使用无人机UTM坐标
     // data.location = data.uav_utm;

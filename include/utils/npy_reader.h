@@ -22,3 +22,5 @@ private:
     static bool ParseHeader(const std::string& header, bool& fortran_order, 
                           std::vector<size_t>& shape, size_t& word_size);
 };
+
+void printMeshData(const std::vector<std::vector<std::vector<float>>>& mesh_data);

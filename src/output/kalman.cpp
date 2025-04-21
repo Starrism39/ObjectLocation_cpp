@@ -99,14 +99,14 @@ void Kalman::process() {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
 
-        // 打印处理结果
-        std::cout << std::string(3, '\n');
-        std::cout << "==================== kalman ====================" << std::endl;
-        std::cout << "kalman处理后的一个OutPackage有 " << outpkg.objs.size() << " 个目标" << std::endl;
+        // // 打印处理结果
+        // std::cout << std::string(3, '\n');
+        // std::cout << "==================== kalman ====================" << std::endl;
+        // std::cout << "kalman处理后的一个OutPackage有 " << outpkg.objs.size() << " 个目标" << std::endl;
 
         outputLock->lock();
-        // 打印每个包的信息
-        printOutPackage(outpkg);
+        // // 打印每个包的信息
+        // printOutPackage(outpkg);
         outputQueue->push(outpkg);
         outputLock->unlock();
     }

@@ -1,5 +1,6 @@
 #include <vector>
 #include <iostream>
+#include <chrono>
 #include "modules/esti_position.h" // 包含EstiPosition类的头文件
 
 void initBBoxParameters(Package &pkg, int img_width = 1920, int img_height = 1080)
@@ -47,9 +48,11 @@ int main()
     // ---------------------- 测试数据初始化 ----------------------
     // 创建测试用的Package对象
     Package test_pkg;
+    double height = 50;
 
     // 填充相机参数 (示例值，需根据实际数据调整)
-    test_pkg.camera_pose = {0, -30, 180.0, 224.0, -60.0, 50.0};    // [yaw, pitch, roll, x, y, z]
+    // test_pkg.camera_pose = {0, -30, 180.0, 224.0, -60.0, 50.0};    // [yaw, pitch, roll, x, y, z]
+    test_pkg.camera_pose = {87.5995, -1.68131, 0.357118, 0.0, -20.0, height};    // [yaw, pitch, roll, x, y, z]
     test_pkg.camera_K = {1000.0, 1000.0, 960.0, 540.0};              // [fx, fy, cx, cy]
     test_pkg.camera_distortion = {0.0, 0.0, 0.0, 0.0, 0.0}; // [k1, k2, p1, p2, k3]
     const double bbox_width = 0.01;  // 归一化宽度
@@ -71,8 +74,8 @@ int main()
         // 初始化估计器（单尺度地图模式）
         EstiPosition estimator(
             false,                                                        // is_multi_map
-            "/home/orin/ObjectLocation_cpp/data/mesh_triangles.npy", // 替换为实际网格路径
-            60.0,                                                         // default_height
+            "/root/xjy/ObjectLocation_cpp/data/plane_map.npy", // 替换为实际网格路径
+            0.0,                                                         // default_height
             "szyx",                                                       // 欧拉角顺序
             true                                                          // enable=true
         );
@@ -89,21 +92,32 @@ int main()
         std::cout << std::endl;
     }
 
-    // ---------------------- 场景2：使用无人机目标点定位 ----------------------
+    test_pkg.camera_pose = {88.4843, -1.29682, 0.448994, 0.0, -20.0, height};    // [yaw, pitch, roll, x, y, z]
+    test_pkg.camera_K = {1000.0, 1000.0, 960.0, 540.0};              // [fx, fy, cx, cy]
+    test_pkg.camera_distortion = {0.0, 0.0, 0.0, 0.0, 0.0}; // [k1, k2, p1, p2, k3]
+    test_pkg.norm_Bbox = {
+        0.5 - bbox_width / 2,   // 中心对齐x坐标
+        0.5 - bbox_height / 2,  // 中心对齐y坐标
+        bbox_width,
+        bbox_height
+    };
+    // initBBoxParameters(test_pkg);
+    test_pkg.uav_utm = simulateBBoxProjection(test_pkg); // 无人机UTM坐标
     {
-        std::cout << "\n===== 测试场景2：enable=false (无人机目标点定位) =====" << std::endl;
+        std::cout << "\n===== 测试场景1：enable=true (相机位姿定位) =====" << std::endl;
 
-        // 初始化估计器（关闭相机定位）
+        // 初始化估计器（单尺度地图模式）
         EstiPosition estimator(
             false,                                                        // is_multi_map
-            "/home/orin/ObjectLocation_cpp/data/mesh_triangles.npy", // 替换为实际网格路径
-            60.0,                                                         // default_height
-            "rzyx",                                                       // 欧拉角顺序
-            false                                                         // enable=false
+            "/root/xjy/ObjectLocation_cpp/data/plane_map.npy", // 替换为实际网格路径
+            0.0,                                                         // default_height
+            "szyx",                                                       // 欧拉角顺序
+            true                                                          // enable=true
         );
 
         // 处理数据
         estimator.process(test_pkg);
+
 
         // 输出结果
         std::cout << "目标位置 (UTM): ";
