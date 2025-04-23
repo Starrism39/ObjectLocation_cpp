@@ -16,5 +16,4 @@ public:
 
 private:
     int max_queue_length;
-    std::unordered_map<std::pair<time_t, std::string>, std::pair<int, int>> groupStatus;
 };

@@ -11,12 +11,12 @@
 
 #include "modules/time_filter.h"
 #include "modules/esti_position.h"
-#include "modules/PkgArrange.h"
 #include "modules/spatial_filter.h"
 
 #include "output/fusion.h"
 #include "output/kalman.h"
 #include "output/output.h"
+
 
 // 工厂函数，根据配置创建管道模块实例
 Module *createModule(YAML::Node config, const std::string &name, const YAML::Node &args)
@@ -80,12 +80,6 @@ Module *createModule(YAML::Node config, const std::string &name, const YAML::Nod
                 args["enable_reloaction"].as<bool>(),
                 args["max_queue_length"].IsDefined() ? args["max_queue_length"].as<int>() : 0);
         }
-    }
-
-    else if (name == "PkgArrange")
-    {
-        return new PkgArrange(
-            args["max_queue_length"].IsDefined() ? args["max_queue_length"].as<int>() : 0);
     }
 
     else if (name == "SpatialFilter")
@@ -165,7 +159,7 @@ void setup_processing_pipeline(
         fusion->getOutputLock(),
         kalman_config["args"]["sigma_a"].as<double>(),
         kalman_config["args"]["max_queue_length"].as<int>());
-
+    
     // 初始传输模块
     const auto &output_config = config["output"]["stage3"];
     output = std::make_shared<Output>(
@@ -202,6 +196,7 @@ int main(int argc, char *argv[])
         std::shared_ptr<Output> output;
         setup_processing_pipeline(config, input, converter, pipeline, fusion, kalman, output);
 
+
         // 等待处理完成
         input->join();
         converter->join();
@@ -209,6 +204,7 @@ int main(int argc, char *argv[])
         fusion->join();
         kalman->join();
         output->join();
+
     }
     catch (const YAML::Exception &e)
     {

@@ -74,8 +74,8 @@ Package PackageConverter::Simulation(const std::shared_ptr<DataPackage> data_pkg
     //     cm.member.z};
 
     // 设置相机参数
-    pkg.camera_K = GetCameraIntrinsics(pkg.camera_id);
-    pkg.camera_distortion = GetCameraDistortion(pkg.camera_id);
+    pkg.camera_K = GetCameraIntrinsics(pkg.uav_id);
+    pkg.camera_distortion = GetCameraDistortion(pkg.uav_id);
 
     // 设置边界框（中心：(640, 540)）
     pkg.Bbox = {
@@ -149,33 +149,35 @@ std::shared_ptr<std::mutex> PackageConverter::getOutputLock() { return this->out
 
 std::shared_ptr<TimePriorityQueue<Package>> PackageConverter::getOutputQueue() { return this->outputQueue; }
 
-std::vector<double> PackageConverter::GetCameraIntrinsics(int camera_type)
-{
-    switch (camera_type)
+std::vector<double> PackageConverter::GetCameraIntrinsics(std::string uav_id)
+{   
+    int id = std::stoi(uav_id);
+    switch (id)
     {
-    case 0:                                    // 电视相机
+    case 1:
         return {6509.18070, 6501.34349, 1061.37015, 698.79659}; // fx, fy, cx, cy
-    case 1:                                    // 红外相机
-        return {1000.0, 1000.0, 320.0, 240.0};
-    case 2:                                    // 微光相机
+    case 2:
+        return {6509.18070, 6501.34349, 1061.37015, 698.79659};
+    case 3:
         return {1000.0, 1000.0, 320.0, 240.0};
     default:
-        throw std::runtime_error("未知的相机类型");
+        throw std::runtime_error("未知的无人机类型");
     }
 }
 
-std::vector<double> PackageConverter::GetCameraDistortion(int camera_type)
+std::vector<double> PackageConverter::GetCameraDistortion(std::string uav_id)
 {
-    switch (camera_type)
+    int id = std::stoi(uav_id);
+    switch (id)
     {
-    case 0:                                    // 电视相机
+    case 1:
         return {-0.13074778, -3.96066684, -0.00492515, 0.00253830, 0.0}; // k1, k2, p1, p2, k3
-    case 1:                                    // 红外相机
-        return {0, 0, 0, 0, 0};
-    case 2:                                    // 微光相机
+    case 2:
+        return {-0.13074778, -3.96066684, -0.00492515, 0.00253830, 0.0};
+    case 3:
         return {0, 0, 0, 0, 0};
     default:
-        throw std::runtime_error("未知的相机类型");
+        throw std::runtime_error("未知的无人机类型");
     }
     
 }
@@ -240,8 +242,8 @@ Package PackageConverter::ConvertSingleObject(const std::shared_ptr<DataPackage>
         height};
 
     // 设置相机参数
-    pkg.camera_K = GetCameraIntrinsics(pkg.camera_id);
-    pkg.camera_distortion = GetCameraDistortion(pkg.camera_id);
+    pkg.camera_K = GetCameraIntrinsics(pkg.uav_id);
+    pkg.camera_distortion = GetCameraDistortion(pkg.uav_id);
 
     // 设置边界框
     pkg.Bbox = {
@@ -287,14 +289,14 @@ std::vector<Package> PackageConverter::ConvertToPackages(const std::shared_ptr<D
     // 获取所有目标信息
     auto objects = data_pkg->get_object_info();
 
-    // 模拟图像正中心数据
-    packages.push_back(Simulation(data_pkg));
+    // // 模拟图像正中心数据
+    // packages.push_back(Simulation(data_pkg));
 
-    // // 为每个目标创建一个Package
-    // for (const auto &obj : objects)
-    // {
-    //     packages.push_back(ConvertSingleObject(data_pkg, obj));
-    // }
+    // 为每个目标创建一个Package
+    for (const auto &obj : objects)
+    {
+        packages.push_back(ConvertSingleObject(data_pkg, obj));
+    }
 
     return packages;
 }
@@ -341,7 +343,7 @@ void PackageConverter::process()
             while (outputQueue->isFull())
             {
                 outputLock->unlock();
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 outputLock->lock();
             }
 

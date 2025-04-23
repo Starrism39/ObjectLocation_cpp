@@ -90,9 +90,9 @@ std::vector<double> EstiPosition::getPoint(const Package &data)
         glm::vec3 source(t.x(), t.y(), t.z());
         glm::vec3 direction(ray.x(), ray.y(), ray.z());
         // std::cout << "t: " << t[0] << " " << t[1] << " " << t[2] << std::endl;
-        // std::cout << "ray: " << ray[0] << " " << ray[1] << " " << ray[2] << std::endl;
+        std::cout << "ray: " << ray[0] << " " << ray[1] << " " << ray[2] << std::endl;
         std::vector<RaycastHit> result = raycast(source, direction, mesh_data, num_triangles);
-        std::cout << "num_triangles: " << num_triangles << std::endl;
+        // std::cout << "num_triangles: " << num_triangles << std::endl;
 
         if (result.empty())
         {
@@ -100,7 +100,7 @@ std::vector<double> EstiPosition::getPoint(const Package &data)
             double l = (default_height - t.z()) / -ray.z();
             Eigen::Vector3d inter_point = t - l * ray;
             // Eigen::Vector3d inter_point = t - data.dp->get_laser_distance() * ray;
-            std::cout << "no point out" << std::endl;
+            // std::cout << "no point out" << std::endl;
 
             return {inter_point.x(), inter_point.y(), inter_point.z()};
         }
@@ -155,6 +155,7 @@ std::vector<double> EstiPosition::getPointFormUavObjectPoint(const Package &data
             double l = (default_height - p_camera.z()) / -ray.z();
             Eigen::Vector3d inter_point = p_camera - l * ray;
             // Eigen::Vector3d inter_point = p_camera - data.dp->get_laser_distance() * ray;
+            // std::cout << "no point out" << std::endl;
 
             return {inter_point.x(), inter_point.y(), inter_point.z()};
         }

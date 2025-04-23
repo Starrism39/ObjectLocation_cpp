@@ -11,6 +11,7 @@
 
 #include "modules/time_filter.h"
 #include "modules/esti_position.h"
+#include "modules/PkgArrange.h"
 #include "modules/spatial_filter.h"
 
 #include "output/fusion.h"
@@ -84,8 +85,8 @@ std::shared_ptr<DataPackage> CreateTestDatapackage(uint64_t timestamp, uint8_t u
 
     // 设置相机信息
     double camera_matrix[6] = {
-        34.348630, 109.030844, 357.522242, // x, y, z
-        88.4843, -1.29682, 0.448994       // yaw, pitch, roll
+        109.030844, 34.348630, 557, // x, y, z
+        88.4843, -40.29682, 0.448994       // yaw, pitch, roll
     };
     data_pkg->set_camera_info(uav_id, camera_type, camera_matrix);
 
@@ -238,6 +239,12 @@ Module *createModule(YAML::Node config, const std::string &name, const YAML::Nod
                 args["enable_reloaction"].as<bool>(),
                 args["max_queue_length"].IsDefined() ? args["max_queue_length"].as<int>() : 0);
         }
+    }
+
+    else if(name == "PkgArrange")
+    {
+        return new PkgArrange(
+            args["max_queue_length"].IsDefined() ? args["max_queue_length"].as<int>() : 0);
     }
 
     else if (name == "SpatialFilter")

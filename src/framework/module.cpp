@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include <algorithm>
 #include <sstream>
+#include <iomanip>
 
 // Package实现
 Package::Package(time_t time) : time(time),
@@ -126,6 +127,7 @@ template <typename T>
 void PrintVector(const std::string &name, const std::vector<T> &vec)
 {
     std::cout << name << ": [";
+    std::cout << std::fixed << std::setprecision(2);
     for (size_t i = 0; i < vec.size(); ++i)
     {
         std::cout << vec[i];

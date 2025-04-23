@@ -74,7 +74,7 @@ void Kalman::process() {
 
                 while (outputQueue->isFull())
                 {
-                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 }
 
                 outputLock->lock();
@@ -96,7 +96,7 @@ void Kalman::process() {
 
         // 等待输出队列有空间
         while (outputQueue->isFull()) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
 
         // // 打印处理结果

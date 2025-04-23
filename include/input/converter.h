@@ -44,10 +44,10 @@ private:
     static Package ConvertSingleObject(const std::shared_ptr<DataPackage> data_pkg, const ObjectInfo &obj);
 
     // 相机内参设置
-    static std::vector<double> GetCameraIntrinsics(int camera_type);
+    static std::vector<double> GetCameraIntrinsics(std::string camera_type);
 
     // 相机畸变参数设置
-    static std::vector<double> GetCameraDistortion(int camera_type);
+    static std::vector<double> GetCameraDistortion(std::string camera_type);
 
     // 从相机姿态获取UTM坐标
     static std::vector<double> PoseToUtm(const std::vector<double> &camera_pose, const std::vector<double> &norm_Bbox, const std::vector<double> &camera_K);

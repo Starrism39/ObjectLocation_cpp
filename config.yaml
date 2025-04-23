@@ -70,9 +70,16 @@ pipeline:
       enable_reloaction: *enable_reloaction
       max_queue_length: *max_queue_length
 
-
   stage2:
     idx: 2
+    parallel: 1
+    name: "PkgArrange"
+    args:
+      max_queue_length: *max_queue_length
+
+
+  stage3:
+    idx: 3
     name: "SpatialFilter"
     parallel: 1
     args:

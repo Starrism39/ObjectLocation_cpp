@@ -55,7 +55,7 @@ void PreProcess::run()
             // 等待输出队列有空间
             while (outputQueue->isFull())
             {
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
             }
 
             // 获取输出锁并推送数据

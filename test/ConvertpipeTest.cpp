@@ -131,7 +131,7 @@ int main()
             }
 
             // 等待一小段时间让转换器处理数据
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
 
         // 等待处理完成
