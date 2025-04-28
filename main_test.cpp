@@ -85,8 +85,8 @@ std::shared_ptr<DataPackage> CreateTestDatapackage(uint64_t timestamp, uint8_t u
 
     // 设置相机信息
     double camera_matrix[6] = {
-        109.030844, 34.348630, 557, // x, y, z
-        88.4843, -40.29682, 0.448994       // yaw, pitch, roll
+        113.885977, 32.820078, 300.695541, // x, y, z
+        -90.905741, -68.407495, -17.421474       // yaw, pitch, roll
     };
     data_pkg->set_camera_info(uav_id, camera_type, camera_matrix);
 
@@ -358,20 +358,23 @@ int main(int argc, char *argv[])
 
         // 输入测试数据
         std::cout << "==================== 启动流水线测试 ====================\n";
-        for (const auto &data_pkg : test_packages)
-        {
+        while(true){
+            for (const auto &data_pkg : test_packages)
             {
-                std::lock_guard<std::mutex> guard(*input_lock);
-                input_queue->push_back(data_pkg);
+                {
+                    std::lock_guard<std::mutex> guard(*input_lock);
+                    input_queue->push_back(data_pkg);
+                }
+
+                std::cout << "添加数据包到输入队列，时间戳: " << data_pkg->get_timestamp()
+                        << "，相机类型: " << (data_pkg->get_camera_type() == 0 ? "电视" : data_pkg->get_camera_type() == 1 ? "红外"
+                                                                                                                            : "微光")
+                        << "，目标数量: " << static_cast<int>(data_pkg->get_obj_num()) << std::endl;
+
+                std::this_thread::sleep_for(std::chrono::milliseconds(30));
             }
-
-            std::cout << "添加数据包到输入队列，时间戳: " << data_pkg->get_timestamp()
-                    << "，相机类型: " << (data_pkg->get_camera_type() == 0 ? "电视" : data_pkg->get_camera_type() == 1 ? "红外"
-                                                                                                                        : "微光")
-                    << "，目标数量: " << static_cast<int>(data_pkg->get_obj_num()) << std::endl;
-
-            std::this_thread::sleep_for(std::chrono::milliseconds(50));
         }
+
 
         // 等待处理完成
         converter->join();

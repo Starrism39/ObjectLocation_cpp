@@ -60,6 +60,7 @@ private:
 // OutPackage用于处理后包的合并
 struct Object{
     int global_id;
+    uint8_t label;
     std::vector<double> location;
     std::map<uint8_t, cv::Mat> uav_img;
 };

@@ -76,21 +76,21 @@ void PkgArrange::process() {
         }
     }
 
-    // 打印处理结果
-    std::cout << std::string(3, '\n');
-    std::cout << "==================== PkgArrange ====================" << std::endl;
+    // // 打印处理结果
+    // std::cout << std::string(3, '\n');
+    // std::cout << "==================== PkgArrange ====================" << std::endl;
 
     // 阶段5：输出处理结果（优化输出锁）
     if (!group.empty()) {
-        std::lock_guard<std::mutex> output_guard(*outputLock);
+        std::unique_lock<std::mutex> output_guard(*outputLock);
         for (auto it = group.rbegin(); it != group.rend(); ++it) {
             while (outputQueue->isFull()) {
                 outputLock->unlock();
                 std::this_thread::sleep_for(std::chrono::milliseconds(1));
                 outputLock->lock();
             }
-            // 打印每个包的信息
-            PrintPackage(*it);
+            // // 打印每个包的信息
+            // PrintPackage(*it);
             outputQueue->push(*it);
         }
     }

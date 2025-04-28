@@ -2,7 +2,7 @@
 #include <stdexcept>
 #include <cmath>
 
-std::tuple<double, double, int, double> LLHtoUTM(double lon_deg, double lat_deg, double height){
+std::tuple<double, double, int, double> LLHtoUTM(double lon_deg, double lat_deg, double height){  // 输入经纬度
     const double a = 6378137.0;
     const double f = 1.0 / 298.257223563;
     const double k0 = 0.9996;
@@ -61,8 +61,8 @@ Package PackageConverter::Simulation(const std::shared_ptr<DataPackage> data_pkg
         cm.member.yaw,
         cm.member.pitch,
         cm.member.roll,
-        easting,
-        northing,
+        easting - 770076.50315,
+        northing - 3634953.59778,
         height};
 
     // pkg.camera_pose = {
@@ -154,11 +154,11 @@ std::vector<double> PackageConverter::GetCameraIntrinsics(std::string uav_id)
     int id = std::stoi(uav_id);
     switch (id)
     {
+    case 0:
+        return {6075.64053, 6005.78954, 1062.33403, 753.55391}; // fx, fy, cx, cy
     case 1:
-        return {6509.18070, 6501.34349, 1061.37015, 698.79659}; // fx, fy, cx, cy
-    case 2:
         return {6509.18070, 6501.34349, 1061.37015, 698.79659};
-    case 3:
+    case 2:
         return {1000.0, 1000.0, 320.0, 240.0};
     default:
         throw std::runtime_error("未知的无人机类型");
@@ -170,11 +170,11 @@ std::vector<double> PackageConverter::GetCameraDistortion(std::string uav_id)
     int id = std::stoi(uav_id);
     switch (id)
     {
+    case 0:
+        return {-0.06132369, -1.97427603, 0.00935857, -0.00276576, 0.0}; // k1, k2, p1, p2, k3
     case 1:
-        return {-0.13074778, -3.96066684, -0.00492515, 0.00253830, 0.0}; // k1, k2, p1, p2, k3
-    case 2:
         return {-0.13074778, -3.96066684, -0.00492515, 0.00253830, 0.0};
-    case 3:
+    case 2:
         return {0, 0, 0, 0, 0};
     default:
         throw std::runtime_error("未知的无人机类型");
@@ -228,17 +228,18 @@ Package PackageConverter::ConvertSingleObject(const std::shared_ptr<DataPackage>
 
     // 设置基本信息
     pkg.uav_id = std::to_string(data_pkg->get_uav_id());
+    // std::cout << pkg.uav_id << std::endl;
     pkg.camera_id = data_pkg->get_camera_type();
 
     // 设置相机姿态
     CameraMatrix cm = data_pkg->get_camera_matrix();
-    auto [easting, northing, zone, height] = LLHtoUTM(cm.member.x, cm.member.y, cm.member.z);
+    auto [easting, northing, zone, height] = LLHtoUTM(cm.member.y, cm.member.x, cm.member.z);
     pkg.camera_pose = {
         cm.member.yaw,
         cm.member.pitch,
         cm.member.roll,
-        easting,
-        northing,
+        easting - 770076.50315,
+        northing - 3634953.59778,
         height};
 
     // 设置相机参数
@@ -247,7 +248,7 @@ Package PackageConverter::ConvertSingleObject(const std::shared_ptr<DataPackage>
 
     // 设置边界框
     pkg.Bbox = {
-        static_cast<int>(obj.rect.x),
+        static_cast<int>(obj.rect.x + 320),
         static_cast<int>(obj.rect.y),
         static_cast<int>(obj.rect.w),
         static_cast<int>(obj.rect.h)};

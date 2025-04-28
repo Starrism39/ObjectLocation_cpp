@@ -127,7 +127,7 @@ template <typename T>
 void PrintVector(const std::string &name, const std::vector<T> &vec)
 {
     std::cout << name << ": [";
-    std::cout << std::fixed << std::setprecision(2);
+    std::cout << std::fixed << std::setprecision(5);
     for (size_t i = 0; i < vec.size(); ++i)
     {
         std::cout << vec[i];

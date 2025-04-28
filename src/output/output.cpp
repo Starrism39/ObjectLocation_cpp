@@ -87,7 +87,7 @@ void Output::process()
 {
     while (isRunning)
     {
-        // std::cout << "running fusion" << std::endl;
+        // std::cout << "running output" << std::endl;
         inputLock->lock();
         if (inputQueue->isEmpty())
         {

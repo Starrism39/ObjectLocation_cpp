@@ -48,23 +48,23 @@ int main()
     // ---------------------- 测试数据初始化 ----------------------
     // 创建测试用的Package对象
     Package test_pkg;
-    double height = 50;
 
     // 填充相机参数 (示例值，需根据实际数据调整)
     // test_pkg.camera_pose = {0, -30, 180.0, 224.0, -60.0, 50.0};    // [yaw, pitch, roll, x, y, z]
-    test_pkg.camera_pose = {87.5995, -1.68131, 0.357118, 0.0, -20.0, height};    // [yaw, pitch, roll, x, y, z]
-    test_pkg.camera_K = {1000.0, 1000.0, 960.0, 540.0};              // [fx, fy, cx, cy]
+    test_pkg.camera_pose = {-90.905741, -68.407495, -17.421474, 770189.29, 3635031.12, 356.695541};    // [yaw, pitch, roll, x, y, z]
+    // test_pkg.camera_K = {6509.18070, 6501.34349, 1061.37015, 698.79659};              // [fx, fy, cx, cy]
+    test_pkg.camera_K = {6509.18070, 6501.34349, 960, 540}; 
     test_pkg.camera_distortion = {0.0, 0.0, 0.0, 0.0, 0.0}; // [k1, k2, p1, p2, k3]
-    const double bbox_width = 0.01;  // 归一化宽度
-    const double bbox_height = 0.01; // 归一化高度
-    test_pkg.norm_Bbox = {
-        0.5 - bbox_width / 2,   // 中心对齐x坐标
-        0.5 - bbox_height / 2,  // 中心对齐y坐标
+    const int bbox_width = 2;  // 归一化宽度
+    const int bbox_height = 2; // 归一化高度
+    const int x = 1141 + 320;
+    const int y = 202;
+    test_pkg.Bbox = {
+        x-1,   // 中心对齐x坐标
+        y-1,  // 中心对齐y坐标
         bbox_width,
         bbox_height
     };
-    initBBoxParameters(test_pkg);
-    test_pkg.uav_utm = simulateBBoxProjection(test_pkg); // 无人机UTM坐标
     PrintPackage(test_pkg);
 
     // ---------------------- 场景1：启用相机位姿定位 ----------------------
@@ -74,7 +74,7 @@ int main()
         // 初始化估计器（单尺度地图模式）
         EstiPosition estimator(
             false,                                                        // is_multi_map
-            "/root/xjy/ObjectLocation_cpp/data/plane_map.npy", // 替换为实际网格路径
+            "/root/xjy/ObjectLocation_cpp/data/plane_map_test.npy", // 替换为实际网格路径
             0.0,                                                         // default_height
             "szyx",                                                       // 欧拉角顺序
             true                                                          // enable=true
@@ -82,42 +82,6 @@ int main()
 
         // 处理数据
         estimator.process(test_pkg);
-
-        // 输出结果
-        std::cout << "目标位置 (UTM): ";
-        for (auto coord : test_pkg.location)
-        {
-            std::cout << coord << " ";
-        }
-        std::cout << std::endl;
-    }
-
-    test_pkg.camera_pose = {88.4843, -1.29682, 0.448994, 0.0, -20.0, height};    // [yaw, pitch, roll, x, y, z]
-    test_pkg.camera_K = {1000.0, 1000.0, 960.0, 540.0};              // [fx, fy, cx, cy]
-    test_pkg.camera_distortion = {0.0, 0.0, 0.0, 0.0, 0.0}; // [k1, k2, p1, p2, k3]
-    test_pkg.norm_Bbox = {
-        0.5 - bbox_width / 2,   // 中心对齐x坐标
-        0.5 - bbox_height / 2,  // 中心对齐y坐标
-        bbox_width,
-        bbox_height
-    };
-    // initBBoxParameters(test_pkg);
-    test_pkg.uav_utm = simulateBBoxProjection(test_pkg); // 无人机UTM坐标
-    {
-        std::cout << "\n===== 测试场景1：enable=true (相机位姿定位) =====" << std::endl;
-
-        // 初始化估计器（单尺度地图模式）
-        EstiPosition estimator(
-            false,                                                        // is_multi_map
-            "/root/xjy/ObjectLocation_cpp/data/plane_map.npy", // 替换为实际网格路径
-            0.0,                                                         // default_height
-            "szyx",                                                       // 欧拉角顺序
-            true                                                          // enable=true
-        );
-
-        // 处理数据
-        estimator.process(test_pkg);
-
 
         // 输出结果
         std::cout << "目标位置 (UTM): ";
@@ -130,3 +94,14 @@ int main()
 
     return 0;
 }
+
+// 相机位置
+// 770189.29 3635031.12
+
+// 像素坐标
+// 245 501
+// 407 806
+
+// UTM
+// 770127.625000 3635039.500000 206.695557
+// 770121.125000 3635033.250000 206.695541

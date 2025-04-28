@@ -92,7 +92,7 @@ Eigen::Vector3d getRay(const std::vector<double> &pixel,
     p_cam = undistort_pixel_coords(p_cam, distortion_coeffs);
     // p_cam = {0, 0, 1};
     
-    Eigen::Vector3d p_cam_changed = {p_cam[2], -p_cam[0], p_cam[1]};
+    Eigen::Vector3d p_cam_changed = {p_cam[2], p_cam[0], p_cam[1]};
 
     // 转换到世界坐标系
     Eigen::Vector3d p_world = rotation * p_cam_changed;

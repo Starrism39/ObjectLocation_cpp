@@ -67,10 +67,10 @@ void Kalman::process() {
             for (int i = packages.size() - 1; i >= 1; --i)
             {   
                 const auto &package = packages[i];
-                // 打印处理结果
-                std::cout << std::string(3, '\n');
-                std::cout << "==================== kalman ====================" << std::endl;
-                std::cout << "kalman处理后的一个OutPackage有 " << package.objs.size() << " 个目标" << std::endl;
+                // // 打印处理结果
+                // std::cout << std::string(3, '\n');
+                // std::cout << "==================== kalman ====================" << std::endl;
+                // std::cout << "kalman处理后的一个OutPackage有 " << package.objs.size() << " 个目标" << std::endl;
 
                 while (outputQueue->isFull())
                 {
@@ -78,8 +78,8 @@ void Kalman::process() {
                 }
 
                 outputLock->lock();
-                // 打印每个包的信息
-                printOutPackage(package);
+                // // 打印每个包的信息
+                // printOutPackage(package);
                 outputQueue->push(package);
                 outputLock->unlock();
             }

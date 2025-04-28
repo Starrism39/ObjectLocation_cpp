@@ -106,8 +106,15 @@ OutPackage Fusion::fusion(std::vector<Package> &pkgs, double timeSlice)
     // 按global_id分组
     std::map<int, std::vector<Package>> id_groups;
     for (auto &pkg : pkgs)
-    {
-        id_groups[pkg.global_id].push_back(pkg);
+    {   
+        int send_data;
+        // pkg.class_id;
+        // pkg.global_id;
+        uint8_t label = static_cast<uint8_t>(pkg.class_id);
+        send_data =  (pkg.global_id << 8) | (label);
+        // pkg.global_id = pkg.global_id | send_data;
+        // send_data = (label32 << 24)
+        id_groups[send_data].push_back(pkg);
     }
 
     // 构建Object
@@ -128,7 +135,7 @@ OutPackage Fusion::fusion(std::vector<Package> &pkgs, double timeSlice)
                 cv::Mat raw_img = pkg.dp->get_rgb();
                 
                 if (!raw_img.empty()) {
-                    cv::Mat target_img = cutTarget(raw_img, {pkg.Bbox[0] - 320, pkg.Bbox[1], pkg.Bbox[2]});
+                    cv::Mat target_img = cutTarget(raw_img, {pkg.Bbox[0] - 320, pkg.Bbox[1], pkg.Bbox[2], pkg.Bbox[3]});
                     int uav_id = std::stoi(pkg.uav_id);
                     // 直接插入到uav_img map
                     obj.uav_img[uav_id] = target_img;

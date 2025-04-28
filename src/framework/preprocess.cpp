@@ -39,15 +39,15 @@ void PreProcess::run()
         }
 
         // 处理数据
-        packages = process(packages);
+        std::vector<Package> results = process(packages);
 
-        // 打印处理结果
+        // // 打印处理结果
         // std::cout << std::string(3, '\n');
         // std::cout << "==================== time filter ====================" << std::endl;
-        // std::cout << "time fliter处理后得到 " << packages.size() << " 个数据包" << std::endl;
+        // std::cout << "time fliter处理后得到 " << results.size() << " 个数据包" << std::endl;
 
         // 输出处理后的数据
-        for (const auto &package : packages)
+        for (const auto &package : results)
         {
             // // 打印每个包的信息
             // PrintPackage(package);

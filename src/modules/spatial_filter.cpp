@@ -373,36 +373,36 @@ std::vector<Package> SpatialFilter::findGlobal(std::map<int, std::vector<Package
     // 更新历史记录
     global_history.enqueue(current_track);
 
-    // // 去重：为每个global_id保留uav_id最小的包
-    // std::map<int, Package> best_packages; // 键为global_id，值为对应的Package
-    // for (const auto &pkg : return_data)
-    // {
-    //     int global_id = pkg.global_id;
+    // 去重：为每个global_id保留uav_id最小的包
+    std::map<int, Package> best_packages; // 键为global_id，值为对应的Package
+    for (const auto &pkg : return_data)
+    {
+        int global_id = pkg.global_id;
 
-    //     // 如果这个global_id还没出现过，或者当前包的uav_id比已保存的小
-    //     if (best_packages.find(global_id) == best_packages.end() ||
-    //         pkg.uav_id < best_packages[global_id].uav_id)
-    //     {
-    //         best_packages[global_id] = pkg;
-    //     }
-    // }
+        // 如果这个global_id还没出现过，或者当前包的uav_id比已保存的小
+        if (best_packages.find(global_id) == best_packages.end() ||
+            pkg.uav_id < best_packages[global_id].uav_id)
+        {
+            best_packages[global_id] = pkg;
+        }
+    }
 
-    // // 将去重后的结果转换为vector
-    // std::vector<Package> fused_result;
-    // fused_result.reserve(best_packages.size()); // 预分配空间避免多次重新分配
-    // for (const auto &pair : best_packages)
-    // {
-    //     fused_result.push_back(pair.second);
-    // }
+    // 将去重后的结果转换为vector
+    std::vector<Package> fused_result;
+    fused_result.reserve(best_packages.size()); // 预分配空间避免多次重新分配
+    for (const auto &pair : best_packages)
+    {
+        fused_result.push_back(pair.second);
+    }
 
     // 按uav_id从大到小排序
-    std::sort(return_data.begin(), return_data.end(),
+    std::sort(fused_result.begin(), fused_result.end(),
               [](const Package &a, const Package &b)
               {
                   return a.uav_id < b.uav_id;
               });
 
-    return return_data;
+    return fused_result;
 }
 
 std::vector<Package> SpatialFilter::process(const std::vector<Package> &packages)

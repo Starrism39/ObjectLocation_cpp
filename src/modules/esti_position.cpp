@@ -90,7 +90,7 @@ std::vector<double> EstiPosition::getPoint(const Package &data)
         glm::vec3 source(t.x(), t.y(), t.z());
         glm::vec3 direction(ray.x(), ray.y(), ray.z());
         // std::cout << "t: " << t[0] << " " << t[1] << " " << t[2] << std::endl;
-        std::cout << "ray: " << ray[0] << " " << ray[1] << " " << ray[2] << std::endl;
+        // std::cout << "ray: " << ray[0] << " " << ray[1] << " " << ray[2] << std::endl;
         std::vector<RaycastHit> result = raycast(source, direction, mesh_data, num_triangles);
         // std::cout << "num_triangles: " << num_triangles << std::endl;
 
