@@ -9,7 +9,6 @@ void Arrange::run()
 {
     while (isRunning)
     {
-        // std::cout << "running arrange" << std::endl;
 
         // 处理包
         process();

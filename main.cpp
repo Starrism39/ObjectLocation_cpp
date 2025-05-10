@@ -128,6 +128,10 @@ void setup_processing_pipeline(
         convert_config["name"].as<std::string>(),
         input->getOutputQueue(),
         input->getOutputLock(),
+        convert_config["args"]["del_easting"].as<double>(),
+        convert_config["args"]["del_northing"].as<double>(),
+        convert_config["args"]["del_uav1_height"].as<double>(),
+        convert_config["args"]["del_uav2_height"].as<double>(),
         convert_config["args"]["max_queue_length"].as<int>());
 
     // 初始化处理管道

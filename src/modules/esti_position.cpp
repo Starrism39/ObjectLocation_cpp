@@ -53,6 +53,7 @@ EstiPosition::~EstiPosition()
 bool EstiPosition::loadMesh(const std::string &mesh_path)
 {   
     bool IfLoad = NPYReader::ReadMesh(mesh_path, mesh_data, num_triangles, vertices_per_triangle, coords_per_vertex);
+    std::cout << "Total objects: " << mesh_data.size() << "\n\n";
     return IfLoad;
     
 }
@@ -187,11 +188,7 @@ void EstiPosition::process(Package &data)
     // // 检查位置是否在默认高度，如果是则清除目标向量
     // if (data.location.size() >= 3 && std::abs(data.location[2] - default_height) < 1e-6)
     // {
-    //     data.location = data.uav_utm;
-    //     // data.location.clear();
+    //     data.location.clear();
     // }
 
-
-    // 最终回退方案 - 始终使用无人机UTM坐标
-    // data.location = data.uav_utm;
 }

@@ -118,6 +118,29 @@ SpatialFilter::SpatialFilter(double time_slice, double distance_threshold, int m
 {
 }
 
+std::vector<Package> SpatialFilter::deduplicatePackages(const std::vector<Package>& packages) {
+    std::unordered_map<std::string, Package> dedup_map;
+    
+    // 生成唯一组合键 uav_id|class_name|tracker_id
+    for (const auto& pkg : packages) {
+        std::string key = pkg.uav_id + "|" + pkg.class_name + "|" 
+                        + std::to_string(pkg.tracker_id);
+        
+        // 保留时间戳最大的包
+        if (!dedup_map.count(key) || pkg.time > dedup_map[key].time) {
+            dedup_map[key] = pkg;
+        }
+    }
+    
+    // 提取map中的值
+    std::vector<Package> result;
+    result.reserve(dedup_map.size());
+    for (const auto& [key, pkg] : dedup_map) {
+        result.emplace_back(pkg);
+    }
+    return result;
+}
+
 std::vector<std::vector<std::vector<Package>>> SpatialFilter::classifyClassIdUav(const std::vector<Package> &packages)
 {
     // 将package包队列按class_id拆分
@@ -379,7 +402,7 @@ std::vector<Package> SpatialFilter::findGlobal(std::map<int, std::vector<Package
     {
         int global_id = pkg.global_id;
 
-        // 如果这个global_id还没出现过，或者当前包的uav_id比已保存的小
+        // 如果这个global_id还没出现过，或者当前包的time比已保存的大，或者当前包的uav_id比已保存的小
         if (best_packages.find(global_id) == best_packages.end() ||
             pkg.uav_id < best_packages[global_id].uav_id)
         {
@@ -406,9 +429,12 @@ std::vector<Package> SpatialFilter::findGlobal(std::map<int, std::vector<Package
 }
 
 std::vector<Package> SpatialFilter::process(const std::vector<Package> &packages)
-{
+{   
+    // 去重
+    const auto dedup_packages = deduplicatePackages(packages);
+
     // 按class_id和uav_id分类
-    auto class_list = classifyClassIdUav(packages);
+    auto class_list = classifyClassIdUav(dedup_packages);
 
     // 空间滤波1：分配local_id
     int local_id = 0;

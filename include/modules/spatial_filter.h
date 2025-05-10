@@ -1,5 +1,6 @@
 #include <vector>
 #include <map>
+#include <unordered_map>
 #include <string>
 #include <Eigen/Dense>
 
@@ -56,6 +57,7 @@ private:
     int max_queue_length;
     CircularQueue global_history;
 
+    std::vector<Package> deduplicatePackages(const std::vector<Package>& packages);
     std::vector<std::vector<std::vector<Package>>> classifyClassIdUav(const std::vector<Package> &packages);
     std::pair<std::vector<std::vector<Package>>, int> spatialFilter1(double distance_threshold, std::vector<std::vector<Package>> &detections_list, int local_id);
     std::map<int, std::vector<Package>> spatialFilter2(const std::vector<std::vector<std::vector<Package>>> &class_list);

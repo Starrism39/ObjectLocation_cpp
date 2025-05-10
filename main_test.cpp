@@ -277,7 +277,12 @@ void setup_processing_pipeline(
         input_config["name"].as<std::string>(),
         input_queue,
         input_lock,
+        input_config["args"]["del_easting"].as<double>(),
+        input_config["args"]["del_northing"].as<double>(),
+        input_config["args"]["del_uav1_height"].as<double>(),
+        input_config["args"]["del_uav2_height"].as<double>(),
         input_config["args"]["max_queue_length"].as<int>());
+
 
     // 初始化处理管道
     std::vector<std::vector<Module *>> pipeline_modules;

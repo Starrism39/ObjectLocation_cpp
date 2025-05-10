@@ -15,6 +15,10 @@ public:
     PackageConverter(const std::string &name,
                      std::shared_ptr<std::vector<std::shared_ptr<DataPackage>>> input_queue,
                      std::shared_ptr<std::mutex> input_lock,
+                     double del_easting,
+                     double del_northing,
+                     double del_uav0_height,
+                     double del_uav1_height,
                      int max_queue_length = 0);
     ~PackageConverter();
 
@@ -30,10 +34,8 @@ public:
     void join();
 
     // 将DataPackage和ObjectInfo转换为Package
-    static std::vector<Package> ConvertToPackages(const std::shared_ptr<DataPackage> &data_pkg);
+    std::vector<Package> ConvertToPackages(const std::shared_ptr<DataPackage> &data_pkg);
 
-    // 模拟单个目标
-    static Package Simulation(const std::shared_ptr<DataPackage> data_pkg);
 
 private:
     // 处理线程
@@ -41,22 +43,22 @@ private:
 
 
     // 将单个ObjectInfo转换为Package
-    static Package ConvertSingleObject(const std::shared_ptr<DataPackage> data_pkg, const ObjectInfo &obj);
+    Package ConvertSingleObject(const std::shared_ptr<DataPackage> data_pkg, const ObjectInfo &obj);
 
     // 相机内参设置
-    static std::vector<double> GetCameraIntrinsics(std::string camera_type);
+    std::vector<double> GetCameraIntrinsics(std::string camera_type);
 
     // 相机畸变参数设置
-    static std::vector<double> GetCameraDistortion(std::string camera_type);
+    std::vector<double> GetCameraDistortion(std::string camera_type);
 
     // 从相机姿态获取UTM坐标
-    static std::vector<double> PoseToUtm(const std::vector<double> &camera_pose, const std::vector<double> &norm_Bbox, const std::vector<double> &camera_K);
+    std::vector<double> PoseToUtm(const std::vector<double> &camera_pose, const std::vector<double> &norm_Bbox, const std::vector<double> &camera_K);
 
     // 获取类别名称
-    static std::string GetClassName(int class_id);
+    std::string GetClassName(int class_id);
 
     // 计算归一化边界框
-    static std::vector<double> NormalizeBbox(const Bbox &bbox, int camera_type);
+    std::vector<double> NormalizeBbox(const Bbox &bbox, int camera_type);
 
 protected:
     std::string name;
@@ -64,6 +66,10 @@ protected:
     std::shared_ptr<TimePriorityQueue<Package>> outputQueue;
     std::shared_ptr<std::mutex> inputLock;
     std::shared_ptr<std::mutex> outputLock;
+    double del_easting;
+    double del_northing;
+    double del_uav0_height;
+    double del_uav1_height;
     std::atomic<bool> isRunning;
     std::thread thread_;
 };

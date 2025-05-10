@@ -1,14 +1,18 @@
 # 默认配置文件，部分参数可以修改，但注意是否正确，否则报错
 global:
-  map_path: &map_path "/root/xjy/ObjectLocation_cpp/data/plane_map_test.npy" #可更换地图
- # multi_map_path: &multi_map_path "data/map/yumen/Tile_geo.pkl" #暂未实现
-  time_slice: &time_slice 30 # 时间线融合, 可以调整, 单位ms
-  time_sliding: &time_sliding 30 # 滑动窗口长度, 可以调整, 单位ms
-  sigma_a: &sigma_a 0.1 # 无人机加速度噪声标准差, 超参
-  enable_reloaction: &enable_reloaction True
-  order: &order "szyx" # 固定参数
+  map_path: &map_path "/root/xjy/ObjectLocation_cpp_test/data/plane_map_test.npy" #可更换地图
   max_queue_length: &max_queue_length 99999
-  output_ip: &output_ip "192.168.10.200"
+
+  time_slice: &time_slice 30 # 时间线融合, 可以调整, 单位ms
+  time_sliding: &time_sliding 30 # kalman滑动窗口长度, 可以调整, 单位ms
+
+  del_easting: &del_easting 770076.50315 # 地图相对于UTM坐标系的x轴偏移
+  del_northing: &del_northing 3634953.59778 # 地图相对于UTM坐标系的y轴偏移
+  del_uav1_height: &del_uav1_height 0.0 # 无人机1的IMU高度偏移
+  del_uav2_height: &del_uav2_height 20.0 # 无人机2的IMU高度偏移
+
+  sigma_a: &sigma_a 0.1 # 无人机加速度噪声标准差
+  output_ip: &output_ip "192.168.1.31"
   output_port: &output_port 8888
   output_interface: &output_interface "enp4s0f0"
 
@@ -27,7 +31,12 @@ input:
     idx: 2
     name: "DataConvert"
     args:
+      del_easting: *del_easting
+      del_northing: *del_northing
+      del_uav1_height: *del_uav1_height
+      del_uav2_height: *del_uav2_height
       max_queue_length: *max_queue_length
+
 
 pipeline:
 
@@ -39,24 +48,6 @@ pipeline:
       time_slice: *time_slice
       max_queue_length: *max_queue_length
 
-  # stage2:
-  #   idx: 1
-  #   parallel: 4  # 并行数，根据机器性能调整
-  #   name: "EstiPosition"
-  #   args:
-  #     is_multi_map : True
-  #     map_path: *multi_map_path # 多尺度地图时pkl文件，否则是obj文件
-  #     default_height: -3.5  #默认平面
-  #     order: *order
-  #     enable_reloaction: *enable_reloaction
-  #     max_queue_length: *max_queue_length
-  #     multi_num : 2 # 多尺度选项：一共几层地图
-  #     downSampled_scale : [0.2, 0.1] # 每层地图相对于原始地图的下采样倍数
-  #     split_scale : [[10, 10], [5, 5]] # 每层地图分为多少块
-  #     block_num : 1 # 找不到的情况下，向周围几个block遍历
-  #     overlap_x_scale : 0.1 # 切分的x重叠率
-  #     overlap_y_scale : 0.1 # 切分的y重叠率
-
 
   stage2:
     idx: 2
@@ -66,8 +57,8 @@ pipeline:
       is_multi_map : False
       map_path: *map_path  # 多尺度地图时pkl文件，否则是obj文件
       default_height: -3.5 #默认平面
-      order: *order
-      enable_reloaction: *enable_reloaction
+      order: "szxy"
+      enable_reloaction: True
       max_queue_length: *max_queue_length
 
   # stage3:

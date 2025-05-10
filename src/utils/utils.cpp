@@ -14,7 +14,7 @@ CameraPose setCameraPose(const std::vector<double> &camera_pose, const std::stri
     Eigen::Vector3d t(camera_pose[3], camera_pose[4], camera_pose[5]);
 
     // 计算旋转矩阵
-    Eigen::Matrix3d R = euler2mat(camera_pose[0], camera_pose[1], camera_pose[2], order);
+    Eigen::Matrix3d R = euler2mat(-camera_pose[0], camera_pose[1], camera_pose[2], order);
 
     // 计算旋转矩阵的逆
     Eigen::Matrix3d R_inv = R.inverse();
@@ -63,21 +63,21 @@ CameraMatrixUtils setK(const std::vector<double> &cam_K)
 }
 
 Eigen::Vector3d getRay(const std::vector<double> &pixel,
-                       const Eigen::Matrix3d &K_inv,
-                       const std::vector<double> &distortion_coeffs,
-                       const Eigen::Matrix3d &rotation)
+    const Eigen::Matrix3d &K_inv,
+    const std::vector<double> &distortion_coeffs,
+    const Eigen::Matrix3d &rotation)
 {
     /*
     获取从相机像素点出发的射线方向。
 
     Args:
-        pixel: 相机像素点坐标。
-        K_inv: 相机内参的逆矩阵。
-        distortion_coeffs: 畸变系数，形状为 (N,) 的浮点型数组，N 是畸变系数的数量。
-        rotation: 相机旋转矩阵，形状为 (3, 3) 的浮点型数组。
+    pixel: 相机像素点坐标。
+    K_inv: 相机内参的逆矩阵。
+    distortion_coeffs: 畸变系数，形状为 (N,) 的浮点型数组，N 是畸变系数的数量。
+    rotation: 相机旋转矩阵，形状为 (3, 3) 的浮点型数组。
 
     Returns:
-        ray: 射线方向向量，形状为 (3,) 的浮点型数组，表示从相机像素点出发的单位方向向量。
+    ray: 射线方向向量，形状为 (3,) 的浮点型数组，表示从相机像素点出发的单位方向向量。
     */
 
     // 将像素坐标转换为齐次坐标
@@ -88,18 +88,17 @@ Eigen::Vector3d getRay(const std::vector<double> &pixel,
     Eigen::Vector3d p_cam = K_inv * pixel_homogeneous;
     // std::cout << "p_cam: " << p_cam[0] << " " << p_cam[1] << " " << p_cam[2] << std::endl;
 
-    // 畸变校正
-    p_cam = undistort_pixel_coords(p_cam, distortion_coeffs);
-    // p_cam = {0, 0, 1};
-    
-    Eigen::Vector3d p_cam_changed = {p_cam[2], p_cam[0], p_cam[1]};
+    // // 畸变校正
+    // p_cam = undistort_pixel_coords(p_cam, distortion_coeffs);
+
+    Eigen::Vector3d p_cam_changed = {p_cam[0], p_cam[2], -p_cam[1]};  // 相机坐标系转吊舱（云台）坐标系
 
     // 转换到世界坐标系
-    Eigen::Vector3d p_world = rotation * p_cam_changed;
+    Eigen::Vector3d p_world = rotation * p_cam_changed;  // 吊舱坐标系转地理坐标系
     p_world = p_world.normalized();
 
     // 归一化为单位向量
-    return {p_world[1], p_world[0], -p_world[2]};
+    return p_world;
 }
 
 Eigen::Vector3d undistort_pixel_coords(const Eigen::Vector3d &p_cam,
@@ -171,12 +170,12 @@ Eigen::Matrix3d euler2mat(double yaw, double pitch, double roll, const std::stri
     Eigen::Matrix3d Rx, Ry, Rz;
 
     Rx << 1, 0, 0,
-        0, cos(r), -sin(r),
-        0, sin(r), cos(r);
+        0, cos(p), -sin(p),
+        0, sin(p), cos(p);
 
-    Ry << cos(p), 0, sin(p),
+    Ry << cos(r), 0, sin(r),
         0, 1, 0,
-        -sin(p), 0, cos(p);
+        -sin(r), 0, cos(r);
 
     Rz << cos(y), -sin(y), 0,
         sin(y), cos(y), 0,
