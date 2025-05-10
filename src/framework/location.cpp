@@ -27,9 +27,9 @@ void Location::run()
         // 处理包
         process(package);
 
-        // 打印处理结果
-        std::cout << std::string(3, '\n');
-        std::cout << "==================== location ====================" << std::endl;
+        // // 打印处理结果
+        // std::cout << std::string(3, '\n');
+        // std::cout << "==================== location ====================" << std::endl;
 
         // 等待输出队列有空间
         while (outputQueue->isFull())
@@ -39,8 +39,8 @@ void Location::run()
 
         // 输出处理后的包
         outputLock->lock();
-        // 打印每个包的信息
-        PrintPackage(package);
+        // // 打印每个包的信息
+        // PrintPackage(package);
         if (!package.location.empty())
         {
             outputQueue->push(package);

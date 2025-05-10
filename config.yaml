@@ -1,13 +1,13 @@
 # 默认配置文件，部分参数可以修改，但注意是否正确，否则报错
 global:
-  map_path: &map_path "/root/xjy/ObjectLocation_cpp_test/data/plane_map_test.npy" #可更换地图
+  map_path: &map_path "/home/xjy/code/location_Map/ObjectLocation_cpp/data/plane_map_test.npy" #可更换地图
   max_queue_length: &max_queue_length 99999
 
-  time_slice: &time_slice 30 # 时间线融合, 可以调整, 单位ms
-  time_sliding: &time_sliding 30 # kalman滑动窗口长度, 可以调整, 单位ms
+  time_slice: &time_slice 1 # 时间线融合, 可以调整, 单位ms
+  time_sliding: &time_sliding 1 # kalman滑动窗口长度, 可以调整, 单位ms
 
-  del_easting: &del_easting 770076.50315 # 地图相对于UTM坐标系的x轴偏移
-  del_northing: &del_northing 3634953.59778 # 地图相对于UTM坐标系的y轴偏移
+  del_easting: &del_easting 508129.51379 # 地图相对于UTM坐标系的x轴偏移
+  del_northing: &del_northing 12663298.75058 # 地图相对于UTM坐标系的y轴偏移
   del_uav1_height: &del_uav1_height 0.0 # 无人机1的IMU高度偏移
   del_uav2_height: &del_uav2_height 20.0 # 无人机2的IMU高度偏移
 

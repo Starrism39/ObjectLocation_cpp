@@ -83,6 +83,58 @@ void Output::output(const OutPackage& pkg){
     sendFragmented(server, buffer, 0xAA55CC33);
 }
 
+void Output::processObjectsInCircle(OutPackage& pkg, double center_x, double center_y, double radius){
+    for (auto& obj : pkg.objs) {
+        // 从global_id提取label并验证
+        const uint8_t current_label = static_cast<uint8_t>(obj.global_id & 0xFF);
+        if (current_label != 0) continue;
+
+        // 检查位置有效性
+        if (obj.location.size() < 2) continue;
+
+        // 计算与圆心的平面距离
+        const double dx = obj.location[0] - center_x;
+        const double dy = obj.location[1] - center_y;
+        const double dist_sq = dx*dx + dy*dy;
+
+        // 判断是否在圆内并更新
+        if (dist_sq <= radius*radius) {
+            const uint8_t new_label = 4;
+            obj.global_id = (obj.global_id & 0xFFFFFF00) | new_label; // 保留高24位
+            obj.label = new_label;  // 同步更新结构体字段
+            // std::cout << "Object " << obj.global_id << " is in the circle." << std::endl;
+        }
+    }
+}
+
+void Output::processObjectsInRectangle(OutPackage& pkg, 
+                                    double min_x, double max_x,
+                                    double min_y, double max_y)
+{
+    for (auto& obj : pkg.objs) {
+        // 从global_id提取label并验证
+        const uint8_t current_label = static_cast<uint8_t>(obj.global_id & 0xFF);
+        if (current_label != 0) continue;
+
+        // 检查位置有效性
+        if (obj.location.size() < 2) continue;
+
+        // 获取坐标值
+        const double x = obj.location[0];
+        const double y = obj.location[1];
+
+        // 判断是否在矩形区域内
+        if (x >= min_x && x <= max_x && 
+            y >= min_y && y <= max_y) 
+        {
+            const uint8_t new_label = 4;
+            obj.global_id = (obj.global_id & 0xFFFFFF00) | new_label;
+            obj.label = new_label;
+            // std::cout << "Object " << obj.global_id << " is in the rectangle." << std::endl;
+        }
+    }
+}
+
 void Output::process()
 {
     while (isRunning)
@@ -102,6 +154,9 @@ void Output::process()
 
         OutPackage package = inputQueue->pop();
         inputLock->unlock();
+
+        // processObjectsInCircle(package, 0.0, 0.0, 3000);
+        processObjectsInRectangle(package, -2000, 2000, -2000, 2000);
 
         output(package);
 

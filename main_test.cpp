@@ -106,73 +106,73 @@ std::vector<std::shared_ptr<DataPackage>> generate_test_data()
 
     // 完全保持原始数据生成逻辑
     std::vector<ObjectInfo> objects1 = {
-        CreateTestObject(0, 1, 1),
-        CreateTestObject(0, 2, 2),
-        CreateTestObject(0, 3, 1)};
-    test_packages.push_back(CreateTestDatapackage(1634567890, 1, 0, objects1));
+        CreateTestObject(0, 1, 0),
+        CreateTestObject(0, 2, 1),
+        CreateTestObject(0, 3, 0)};
+    test_packages.push_back(CreateTestDatapackage(1634567890, 0, 0, objects1));
 
     std::vector<ObjectInfo> objects2 = {
-        CreateTestObject(0, 1, 3),
-        CreateTestObject(0, 2, 3)};
-    test_packages.push_back(CreateTestDatapackage(1634567891, 2, 0, objects2));
+        CreateTestObject(0, 1, 2),
+        CreateTestObject(0, 2, 2)};
+    test_packages.push_back(CreateTestDatapackage(1634567891, 1, 0, objects2)); 
 
     std::vector<ObjectInfo> objects3 = {
-        CreateTestObject(0, 1, 1),
-        CreateTestObject(0, 2, 4),
-        CreateTestObject(0, 3, 3)};
-    test_packages.push_back(CreateTestDatapackage(1634567892, 1, 0, objects3));
+        CreateTestObject(0, 1, 0),
+        CreateTestObject(0, 2, 3),
+        CreateTestObject(0, 3, 2)};
+    test_packages.push_back(CreateTestDatapackage(1634567892, 0, 0, objects3));
 
     std::vector<ObjectInfo> objects4 = {
-        CreateTestObject(0, 1, 1),
-        CreateTestObject(0, 2, 4),
-        CreateTestObject(0, 3, 3)};
-    test_packages.push_back(CreateTestDatapackage(1634567893, 2, 0, objects4));
+        CreateTestObject(0, 1, 0),
+        CreateTestObject(0, 2, 3),
+        CreateTestObject(0, 3, 2)};
+    test_packages.push_back(CreateTestDatapackage(1634567893, 1, 0, objects4));
 
     std::vector<ObjectInfo> objects5 = {
-        CreateTestObject(0, 1, 1),
-        CreateTestObject(0, 2, 4),
-        CreateTestObject(0, 3, 3)};
-    test_packages.push_back(CreateTestDatapackage(1634567894, 1, 0, objects5));
+        CreateTestObject(0, 1, 0),
+        CreateTestObject(0, 2, 3),
+        CreateTestObject(0, 3, 2)};
+    test_packages.push_back(CreateTestDatapackage(1634567894, 0, 0, objects5));
 
     std::vector<ObjectInfo> objects6 = {
-        CreateTestObject(0, 1, 1),
-        CreateTestObject(0, 2, 4),
-        CreateTestObject(0, 3, 3)};
-    test_packages.push_back(CreateTestDatapackage(1634567895, 2, 0, objects6));
+        CreateTestObject(0, 1, 0),
+        CreateTestObject(0, 2, 3),
+        CreateTestObject(0, 3, 2)};
+    test_packages.push_back(CreateTestDatapackage(1634567895, 1, 0, objects6));
 
     std::vector<ObjectInfo> objects7 = {
-        CreateTestObject(0, 1, 3),
-        CreateTestObject(0, 2, 1)};
-    test_packages.push_back(CreateTestDatapackage(1634567896, 1, 0, objects7));
+        CreateTestObject(0, 1, 2),
+        CreateTestObject(0, 2, 0)};
+    test_packages.push_back(CreateTestDatapackage(1634567896, 0, 0, objects7));
 
     std::vector<ObjectInfo> objects8 = {
-        CreateTestObject(0, 1, 1),
-        CreateTestObject(0, 2, 4),
-        CreateTestObject(0, 3, 3)};
-    test_packages.push_back(CreateTestDatapackage(1634567897, 2, 0, objects8));
+        CreateTestObject(0, 1, 0),
+        CreateTestObject(0, 2, 3),
+        CreateTestObject(0, 3, 2)};
+    test_packages.push_back(CreateTestDatapackage(1634567897, 1, 0, objects8));
 
     std::vector<ObjectInfo> objects9 = {
-        CreateTestObject(0, 1, 1),
-        CreateTestObject(0, 2, 4)};
-    test_packages.push_back(CreateTestDatapackage(1634567898, 1, 0, objects9));
+        CreateTestObject(0, 1, 0),
+        CreateTestObject(0, 2, 3)};
+    test_packages.push_back(CreateTestDatapackage(1634567898, 0, 0, objects9));
 
     std::vector<ObjectInfo> objects10 = {
-        CreateTestObject(0, 1, 1),
-        CreateTestObject(0, 2, 1),
-        CreateTestObject(0, 3, 2)};
-    test_packages.push_back(CreateTestDatapackage(1634567899, 2, 0, objects10));
+        CreateTestObject(0, 1, 0),
+        CreateTestObject(0, 2, 0),
+        CreateTestObject(0, 3, 1)};
+    test_packages.push_back(CreateTestDatapackage(1634567899, 1, 0, objects10));
 
     std::vector<ObjectInfo> objects11 = {
-        CreateTestObject(0, 1, 1),
-        CreateTestObject(0, 2, 2),
-        CreateTestObject(0, 3, 4)};
-    test_packages.push_back(CreateTestDatapackage(1634567900, 1, 0, objects11));
+        CreateTestObject(0, 1, 0),
+        CreateTestObject(0, 2, 1),
+        CreateTestObject(0, 3, 3)};
+    test_packages.push_back(CreateTestDatapackage(1634567900, 0, 0, objects11));
 
     std::vector<ObjectInfo> objects12 = {
-        CreateTestObject(0, 1, 1),
-        CreateTestObject(0, 2, 4),
-        CreateTestObject(0, 3, 3)};
-    test_packages.push_back(CreateTestDatapackage(1634567901, 2, 0, objects12));
+        CreateTestObject(0, 1, 0),
+        CreateTestObject(0, 2, 3),
+        CreateTestObject(0, 3, 2)};
+    test_packages.push_back(CreateTestDatapackage(1634567901, 1, 0, objects12));
 
     return test_packages;
 }
@@ -363,21 +363,20 @@ int main(int argc, char *argv[])
 
         // 输入测试数据
         std::cout << "==================== 启动流水线测试 ====================\n";
-        while(true){
-            for (const auto &data_pkg : test_packages)
+
+        for (const auto &data_pkg : test_packages)
+        {
             {
-                {
-                    std::lock_guard<std::mutex> guard(*input_lock);
-                    input_queue->push_back(data_pkg);
-                }
-
-                std::cout << "添加数据包到输入队列，时间戳: " << data_pkg->get_timestamp()
-                        << "，相机类型: " << (data_pkg->get_camera_type() == 0 ? "电视" : data_pkg->get_camera_type() == 1 ? "红外"
-                                                                                                                            : "微光")
-                        << "，目标数量: " << static_cast<int>(data_pkg->get_obj_num()) << std::endl;
-
-                std::this_thread::sleep_for(std::chrono::milliseconds(30));
+                std::lock_guard<std::mutex> guard(*input_lock);
+                input_queue->push_back(data_pkg);
             }
+
+            std::cout << "添加数据包到输入队列，时间戳: " << data_pkg->get_timestamp()
+                    << "，相机类型: " << (data_pkg->get_camera_type() == 0 ? "电视" : data_pkg->get_camera_type() == 1 ? "红外"
+                                                                                                                        : "微光")
+                    << "，目标数量: " << static_cast<int>(data_pkg->get_obj_num()) << std::endl;
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(30));
         }
 
 

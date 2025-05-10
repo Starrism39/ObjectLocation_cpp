@@ -108,12 +108,11 @@ OutPackage Fusion::fusion(std::vector<Package> &pkgs, double timeSlice)
     for (auto &pkg : pkgs)
     {   
         int send_data;
-        // pkg.class_id;
-        // pkg.global_id;
         uint8_t label = static_cast<uint8_t>(pkg.class_id);
         send_data =  (pkg.global_id << 8) | (label);
-        // pkg.global_id = pkg.global_id | send_data;
-        // send_data = (label32 << 24)
+
+        // send_data = pkg.global_id;
+
         id_groups[send_data].push_back(pkg);
     }
 
@@ -122,6 +121,7 @@ OutPackage Fusion::fusion(std::vector<Package> &pkgs, double timeSlice)
     {
         Object obj;
         obj.global_id = gid;
+        obj.label = static_cast<uint8_t>(obj.global_id & 0xFF);
 
         // 所有相同global_id的包使用第一个location
         if (!group.empty())
