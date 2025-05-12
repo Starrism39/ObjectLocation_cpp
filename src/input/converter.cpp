@@ -94,7 +94,7 @@ std::vector<double> PackageConverter::GetCameraIntrinsics(std::string uav_id)
     case 0:
         return {4816.6703673120310, 4767.6306828021980, 976.34574378625325, 550.49482992540891}; 
     case 1:
-        return {3979.3618642870374, 3977.8845322936186, 874.39799331744405, 551.95379984461476}; // fx, fy, cx, cy 待改
+        return {4650.9914986723425, 4647.1903040210036, 1085.7636585526575, 607.97367054885467}; // fx, fy, cx, cy 待改
     case 2:
         return {1000.0, 1000.0, 320.0, 240.0};
     default:
@@ -110,7 +110,7 @@ std::vector<double> PackageConverter::GetCameraDistortion(std::string uav_id)
     case 0:
         return {0, 0, 0, 0, 0};
     case 1:
-        return {-4.8811069647792205e-01, 8.6313025541602748, 1.2261364286935490e-03, -9.2016587032145384e-03, -1.0497740225861931e+02}; // k1, k2, p1, p2, k3 待改
+        return {0, 0, 0, 0, 0}; // k1, k2, p1, p2, k3 待改
     case 2:
         return {0, 0, 0, 0, 0};
     default:

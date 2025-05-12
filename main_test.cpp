@@ -13,6 +13,7 @@
 #include "modules/esti_position.h"
 #include "modules/PkgArrange.h"
 #include "modules/spatial_filter.h"
+#include "modules/RTK_difference.h"
 
 #include "output/fusion.h"
 #include "output/kalman.h"
@@ -113,30 +114,30 @@ std::vector<std::shared_ptr<DataPackage>> generate_test_data()
 
     std::vector<ObjectInfo> objects2 = {
         CreateTestObject(0, 1, 2),
-        CreateTestObject(0, 2, 2)};
+        CreateTestObject(0, 2, 1)};
     test_packages.push_back(CreateTestDatapackage(1634567891, 1, 0, objects2)); 
 
     std::vector<ObjectInfo> objects3 = {
         CreateTestObject(0, 1, 0),
-        CreateTestObject(0, 2, 3),
+        CreateTestObject(0, 2, 0),
         CreateTestObject(0, 3, 2)};
     test_packages.push_back(CreateTestDatapackage(1634567892, 0, 0, objects3));
 
     std::vector<ObjectInfo> objects4 = {
         CreateTestObject(0, 1, 0),
-        CreateTestObject(0, 2, 3),
+        CreateTestObject(0, 2, 1),
         CreateTestObject(0, 3, 2)};
     test_packages.push_back(CreateTestDatapackage(1634567893, 1, 0, objects4));
 
     std::vector<ObjectInfo> objects5 = {
         CreateTestObject(0, 1, 0),
-        CreateTestObject(0, 2, 3),
+        CreateTestObject(0, 2, 0),
         CreateTestObject(0, 3, 2)};
     test_packages.push_back(CreateTestDatapackage(1634567894, 0, 0, objects5));
 
     std::vector<ObjectInfo> objects6 = {
         CreateTestObject(0, 1, 0),
-        CreateTestObject(0, 2, 3),
+        CreateTestObject(0, 2, 1),
         CreateTestObject(0, 3, 2)};
     test_packages.push_back(CreateTestDatapackage(1634567895, 1, 0, objects6));
 
@@ -147,13 +148,13 @@ std::vector<std::shared_ptr<DataPackage>> generate_test_data()
 
     std::vector<ObjectInfo> objects8 = {
         CreateTestObject(0, 1, 0),
-        CreateTestObject(0, 2, 3),
+        CreateTestObject(0, 2, 0),
         CreateTestObject(0, 3, 2)};
     test_packages.push_back(CreateTestDatapackage(1634567897, 1, 0, objects8));
 
     std::vector<ObjectInfo> objects9 = {
         CreateTestObject(0, 1, 0),
-        CreateTestObject(0, 2, 3)};
+        CreateTestObject(0, 2, 1)};
     test_packages.push_back(CreateTestDatapackage(1634567898, 0, 0, objects9));
 
     std::vector<ObjectInfo> objects10 = {
@@ -165,12 +166,12 @@ std::vector<std::shared_ptr<DataPackage>> generate_test_data()
     std::vector<ObjectInfo> objects11 = {
         CreateTestObject(0, 1, 0),
         CreateTestObject(0, 2, 1),
-        CreateTestObject(0, 3, 3)};
+        CreateTestObject(0, 3, 2)};
     test_packages.push_back(CreateTestDatapackage(1634567900, 0, 0, objects11));
 
     std::vector<ObjectInfo> objects12 = {
         CreateTestObject(0, 1, 0),
-        CreateTestObject(0, 2, 3),
+        CreateTestObject(0, 2, 1),
         CreateTestObject(0, 3, 2)};
     test_packages.push_back(CreateTestDatapackage(1634567901, 1, 0, objects12));
 
@@ -256,6 +257,32 @@ Module *createModule(YAML::Node config, const std::string &name, const YAML::Nod
             config["pipeline"]["stage2"]["parallel"].as<int>(),
             args["max_queue_length"].IsDefined() ? args["max_queue_length"].as<int>() : 0);
     }
+
+    else if (name == "RTKDifference")
+    {
+        return new RTKDifference(
+            args["time_slice"].as<double>(),
+            args["class_1"].as<int>(),
+            args["x1"].as<double>(),
+            args["y1"].as<double>(),
+            args["class_2"].as<int>(),
+            args["x2"].as<double>(),
+            args["y2"].as<double>(),
+            args["max_queue_length"].IsDefined() ? args["max_queue_length"].as<int>() : 0);
+    }
+
+    // else if (name == "RTKDifference")
+    // {
+    //     return new RTKDifference(
+    //         args["time_slice"].as<double>(),
+    //         1,
+    //         20.0,
+    //         30.0,
+    //         2,
+    //         -10.0,
+    //         10.0,
+    //         args["max_queue_length"].IsDefined() ? args["max_queue_length"].as<int>() : 0);
+    // }
 
     std::cerr << "Error: Unknown module type " << std::endl;
     return nullptr;
@@ -364,20 +391,24 @@ int main(int argc, char *argv[])
         // 输入测试数据
         std::cout << "==================== 启动流水线测试 ====================\n";
 
-        for (const auto &data_pkg : test_packages)
-        {
+        while(true){
+            for (const auto &data_pkg : test_packages)
             {
-                std::lock_guard<std::mutex> guard(*input_lock);
-                input_queue->push_back(data_pkg);
+                data_pkg->set_timestamp(data_pkg -> get_timestamp() + 12);
+                {
+                    std::lock_guard<std::mutex> guard(*input_lock);
+                    input_queue->push_back(data_pkg);
+                }
+
+                std::cout << "添加数据包到输入队列，时间戳: " << data_pkg->get_timestamp()
+                        << "，相机类型: " << (data_pkg->get_camera_type() == 0 ? "电视" : data_pkg->get_camera_type() == 1 ? "红外"
+                                                                                                                            : "微光")
+                        << "，目标数量: " << static_cast<int>(data_pkg->get_obj_num()) << std::endl;
+
+                std::this_thread::sleep_for(std::chrono::milliseconds(30));
             }
-
-            std::cout << "添加数据包到输入队列，时间戳: " << data_pkg->get_timestamp()
-                    << "，相机类型: " << (data_pkg->get_camera_type() == 0 ? "电视" : data_pkg->get_camera_type() == 1 ? "红外"
-                                                                                                                        : "微光")
-                    << "，目标数量: " << static_cast<int>(data_pkg->get_obj_num()) << std::endl;
-
-            std::this_thread::sleep_for(std::chrono::milliseconds(30));
         }
+        
 
 
         // 等待处理完成

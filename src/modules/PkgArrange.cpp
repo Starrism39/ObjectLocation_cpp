@@ -79,6 +79,7 @@ void PkgArrange::process() {
     // // 打印处理结果
     // std::cout << std::string(3, '\n');
     // std::cout << "==================== PkgArrange ====================" << std::endl;
+    // std::cout << "PkgArrange处理后得到 " << group.size() << " 个数据包" << std::endl;
 
     // 阶段5：输出处理结果（优化输出锁）
     if (!group.empty()) {

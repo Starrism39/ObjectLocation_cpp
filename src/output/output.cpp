@@ -99,7 +99,7 @@ void Output::processObjectsInCircle(OutPackage& pkg, double center_x, double cen
 
         // 判断是否在圆内并更新
         if (dist_sq <= radius*radius) {
-            const uint8_t new_label = 4;
+            const uint8_t new_label = 3;
             obj.global_id = (obj.global_id & 0xFFFFFF00) | new_label; // 保留高24位
             obj.label = new_label;  // 同步更新结构体字段
             // std::cout << "Object " << obj.global_id << " is in the circle." << std::endl;
@@ -127,7 +127,7 @@ void Output::processObjectsInRectangle(OutPackage& pkg,
         if (x >= min_x && x <= max_x && 
             y >= min_y && y <= max_y) 
         {
-            const uint8_t new_label = 4;
+            const uint8_t new_label = 3;
             obj.global_id = (obj.global_id & 0xFFFFFF00) | new_label;
             obj.label = new_label;
             // std::cout << "Object " << obj.global_id << " is in the rectangle." << std::endl;
@@ -148,15 +148,19 @@ void Output::process()
             continue;
         }
 
-        // // 打印处理结果
-        // std::cout << std::string(3, '\n');
-        // std::cout << "==================== output ====================" << std::endl;
+        // 打印处理结果
+        std::cout << std::string(3, '\n');
+        std::cout << "==================== output ====================" << std::endl;
+
 
         OutPackage package = inputQueue->pop();
         inputLock->unlock();
 
+        // 打印每个包的信息
+        printOutPackage(package);
+
         // processObjectsInCircle(package, 0.0, 0.0, 3000);
-        processObjectsInRectangle(package, -2000, 2000, -2000, 2000);
+        // processObjectsInRectangle(package, -2000, 2000, -2000, 2000);
 
         output(package);
 

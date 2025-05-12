@@ -9,7 +9,7 @@ class CircularQueue
 {
 private:
     int capacity;
-    std::vector<std::map<std::string, int>> queue; // 改用vector存储map
+    std::vector<std::map<std::string, int>> queue;
     int size;
     int front;
     int rear;
@@ -62,4 +62,6 @@ private:
     std::pair<std::vector<std::vector<Package>>, int> spatialFilter1(double distance_threshold, std::vector<std::vector<Package>> &detections_list, int local_id);
     std::map<int, std::vector<Package>> spatialFilter2(const std::vector<std::vector<std::vector<Package>>> &class_list);
     std::vector<Package> findGlobal(std::map<int, std::vector<Package>> &grouped_detections);
+    
+    std::vector<Package> findGlobalOnly(std::vector<Package> &detections);
 };

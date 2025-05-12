@@ -425,13 +425,94 @@ std::vector<Package> SpatialFilter::findGlobal(std::map<int, std::vector<Package
                   return a.uav_id < b.uav_id;
               });
 
+    return return_data;
+}
+
+std::vector<Package> SpatialFilter::findGlobalOnly(std::vector<Package> &detections)
+{
+    std::vector<Package> return_data;
+    std::map<std::string, int> current_track; // 记录当前批次的key到global_id的映射
+
+    // 遍历每个检测包
+    for (auto &pkg : detections)
+    {
+        // 生成唯一标识的key
+        std::string key = std::to_string(pkg.class_id) + "_" + pkg.uav_id + "_" + std::to_string(pkg.tracker_id);
+
+        // 检查当前批次是否已处理过该key
+        auto it = current_track.find(key);
+        if (it != current_track.end())
+        {
+            // 已存在，复用global_id
+            pkg.global_id = it->second;
+        }
+        else
+        {
+            // 在历史记录中查找该key
+            bool found = false;
+            int history_global_id = -1;
+            for (int i = 0; i < global_history.getSize(); ++i)
+            {
+                int value;
+                if (global_history.findKeyInMap(key, i, value))
+                {
+                    found = true;
+                    history_global_id = value;
+                    break; // 找到最近的记录
+                }
+            }
+
+            if (found)
+            {
+                pkg.global_id = history_global_id;
+            }
+            else
+            {
+                // 分配新的global_id
+                int new_global_id = global_history.getMaxGlobalId() + 1;
+                global_history.setMaxGlobalId(new_global_id);
+                pkg.global_id = new_global_id;
+            }
+
+            // 记录到当前批次映射
+            current_track[key] = pkg.global_id;
+        }
+
+        return_data.push_back(pkg);
+    }
+
+    // 更新历史记录
+    global_history.enqueue(current_track);
+
+    // 去重：为每个global_id保留uav_id最小的包
+    std::map<int, Package> best_packages;
+    for (const auto &pkg : return_data)
+    {
+        int global_id = pkg.global_id;
+        if (best_packages.find(global_id) == best_packages.end() || pkg.uav_id < best_packages[global_id].uav_id)
+        {
+            best_packages[global_id] = pkg;
+        }
+    }
+
+    // 转换为vector并按uav_id升序排序
+    std::vector<Package> fused_result;
+    fused_result.reserve(best_packages.size());
+    for (const auto &pair : best_packages)
+    {
+        fused_result.push_back(pair.second);
+    }
+
+    std::sort(fused_result.begin(), fused_result.end(), [](const Package &a, const Package &b)
+              { return a.uav_id < b.uav_id; });
+
     return fused_result;
 }
 
 std::vector<Package> SpatialFilter::process(const std::vector<Package> &packages)
 {   
     // 去重
-    const auto dedup_packages = deduplicatePackages(packages);
+    auto dedup_packages = deduplicatePackages(packages);
 
     // 按class_id和uav_id分类
     auto class_list = classifyClassIdUav(dedup_packages);
@@ -452,6 +533,8 @@ std::vector<Package> SpatialFilter::process(const std::vector<Package> &packages
     // 空间滤波2：更新平均位置
     auto grouped_list = spatialFilter2(class_list);
 
-    // 执行global_id追踪
     return findGlobal(grouped_list);
+
+    // // 执行global_id追踪
+    // return findGlobalOnly(dedup_packages);
 }

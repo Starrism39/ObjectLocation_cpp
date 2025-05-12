@@ -220,7 +220,8 @@ void printOutPackage(const OutPackage &package) {
     for (size_t i = 0; i < package.objs.size(); ++i) {
         const Object &obj = package.objs[i];
         std::cout << "  Object #" << i+1 << "\n";
-        std::cout << "    Global ID: " << obj.global_id << "\n";
+        std::cout << "    label: " << static_cast<int>(obj.global_id & 0x000000FF) << "\n";
+        std::cout << "    Global ID: " << static_cast<int>((obj.global_id & 0xFFFFFF00) >> 8) << "\n";
         
         // 位置信息
         std::cout << "    Location: [";
