@@ -1,15 +1,16 @@
 #include "modules/RTK_difference.h"
 #include <iostream>
-#include <random>
 #include <algorithm>
 #include <limits>
 #include <set>
 
-RTKDifference::RTKDifference(double time_slice, int class_1, double x1, double y1, int class_2, double x2, double y2, int max_queue_length) : Difference("RTKDifference", time_slice, max_queue_length),
+RTKDifference::RTKDifference(double time_slice, int class_1, double x1, double y1, int max_queue_length) : Difference("RTKDifference", time_slice, max_queue_length),
+                                                                            class_1_(class_1),
                                                                             max_queue_length(max_queue_length)
 {
     configureClass(class_1, {x1, y1});
-    configureClass(class_2, {x2, y2});
+    del_class_config_1[class_1] = {0, 0};
+    del_class_config_2[class_1] = {0, 0};
 }
 
 
@@ -17,26 +18,11 @@ void RTKDifference::configureClass(int cls_id, std::pair<double, double> pos) {
     class_config[cls_id] = pos;
 }
 
-std::vector<Package> RTKDifference::process(const std::vector<Package> &packages)  // 噪声是前随机数
+std::vector<Package> RTKDifference::process(const std::vector<Package> &packages)
 {
-    // Step 1: 检查是否存在基准类别（class_config中的类别）数据包
-    bool has_base_class = std::any_of(packages.begin(), packages.end(),
-        [this](const Package& pkg) {
-            return class_config.find(pkg.class_id) != class_config.end();
-        });
-    if (!has_base_class) return {}; // 无基准类别直接返回
     std::vector<Package> result;
-    // 存储基准类别位置信息的结构体
-    struct BaseClassPosRecord {
-        std::vector<double> original_pos; // 原始坐标
-        std::vector<double> adjusted_pos; // 调整后的坐标
-    };
-    std::vector<BaseClassPosRecord> base_class_records;
-    // 初始化随机数生成器
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<> rand_offset(-0.25, 0.25);
-    // Step 2: 处理基准类别数据包
+
+    // Step 1: 处理基准类别数据包
     for (const Package& pkg : packages) {
         Package processed_pkg = pkg.copy();
         
@@ -51,68 +37,62 @@ std::vector<Package> RTKDifference::process(const std::vector<Package> &packages
             if (processed_pkg.location.size() < 2) {
                 processed_pkg.location.resize(2, 0.0);
             }
-            processed_pkg.location[0] = base_x + rand_offset(gen);
-            processed_pkg.location[1] = base_y + rand_offset(gen);
+
+            // 记录位置差
+            std::vector<double> del_pos = {orig_pos[0] - base_x, orig_pos[1] - base_y};
             
-            // 保存位置记录供后续使用
-            base_class_records.push_back({orig_pos, processed_pkg.location});
+            // 根据UAV ID选择保存位置差的map
+            if (processed_pkg.uav_id == "0") {
+                del_class_config_1[processed_pkg.class_id] = {del_pos[0], del_pos[1]};
+            } else if (processed_pkg.uav_id == "1") {
+                del_class_config_2[processed_pkg.class_id] = {del_pos[0], del_pos[1]};
+            }
+
+            // 更改processed_pkg的location
+            std::random_device rd;
+            std::mt19937 gen_(rd());
+            std::uniform_real_distribution<double> dis_(-0.2, 0.2);
+            processed_pkg.location[0] = base_x + dis_(gen_);
+            processed_pkg.location[1] = base_y + dis_(gen_);
         }
         result.push_back(processed_pkg);
     }
-    // Step 3: 处理非基准类别数据包
+    
+    // Step 2: 处理非基准类别数据包
     for (Package& pkg : result) {
         if (class_config.count(pkg.class_id)) continue; // 跳过基准类别
+
+        std::pair<double, double> del_pos;
+
+        // 根据UAV ID选择使用的位置差
+        if (pkg.uav_id == "0") {
+            auto del_config = del_class_config_1.at(class_1_);
+            del_pos = del_config;
+
+        }
+        else if (pkg.uav_id == "1") {
+            auto del_config = del_class_config_2.at(class_1_);
+            del_pos = del_config;
+
+        }
         
         // 确保位置向量有效
         if (pkg.location.size() < 2) {
             pkg.location.resize(2, 0.0);
         }
-        const std::vector<double>& current_pos = pkg.location;
-        // 查找最近基准点的原始位置
-        const BaseClassPosRecord* nearest_record = nullptr;
-        double min_sq_distance = std::numeric_limits<double>::max();
-        for (const auto& record : base_class_records) {
-            if (record.original_pos.size() < 2) continue;
-            // 计算欧氏距离平方（避免开方提升性能）
-            double dx = current_pos[0] - record.original_pos[0];
-            double dy = current_pos[1] - record.original_pos[1];
-            double sq_dist = dx*dx + dy*dy;
-            if (sq_dist < min_sq_distance) {
-                min_sq_distance = sq_dist;
-                nearest_record = &record;
-            }
-        }
-        // 应用位置调整
-        if (nearest_record && nearest_record->adjusted_pos.size() >= 2) {
-            // 计算原始相对偏移
-            double dx = current_pos[0] - nearest_record->original_pos[0];
-            double dy = current_pos[1] - nearest_record->original_pos[1];
-            
-            // 新位置 = 基准点调整后的位置 + 原始偏移量
-            pkg.location[0] = nearest_record->adjusted_pos[0] + dx;
-            pkg.location[1] = nearest_record->adjusted_pos[1] + dy;
-        }
+        
+        pkg.location[0] = pkg.location[0] - del_pos.first;
+        pkg.location[1] = pkg.location[1] - del_pos.second;
+
     }
     return result;
 }
 
-// std::vector<Package> RTKDifference::process(const std::vector<Package> &packages)  // 噪声是前一帧和这一帧的差
+// std::vector<Package> RTKDifference::process(const std::vector<Package> &packages)
 // {
-//     // Step 1: 检查是否存在基准类别（class_config中的类别）数据包
-//     bool has_base_class = std::any_of(packages.begin(), packages.end(),
-//         [this](const Package& pkg) {
-//             return class_config.find(pkg.class_id) != class_config.end();
-//         });
-//     if (!has_base_class) return {}; // 无基准类别直接返回
 //     std::vector<Package> result;
-//     // 存储基准类别位置信息的结构体
-//     struct BaseClassPosRecord {
-//         std::vector<double> original_pos; // 原始坐标
-//         std::vector<double> adjusted_pos; // 调整后的坐标
-//     };
-//     std::vector<BaseClassPosRecord> base_class_records;
 
-//     // Step 2: 处理基准类别数据包
+//     // Step 1: 处理基准类别数据包
 //     for (const Package& pkg : packages) {
 //         Package processed_pkg = pkg.copy();
         
@@ -123,62 +103,41 @@ std::vector<Package> RTKDifference::process(const std::vector<Package> &packages
 //             // 记录原始位置
 //             std::vector<double> orig_pos = processed_pkg.location;
             
-//             // 计算噪声：上一次位置和当前位置的差值作为噪声
-//             double noise_x = 0.0, noise_y = 0.0;
-//             if (last_original_pos.count(processed_pkg.class_id)) {
-//                 noise_x = orig_pos[0] - last_original_pos[processed_pkg.class_id].first;
-//                 noise_y = orig_pos[1] - last_original_pos[processed_pkg.class_id].second;
-//             }
-
-//             // 更新last_original_pos
-//             last_original_pos[processed_pkg.class_id] = {orig_pos[0], orig_pos[1]};
-
-//             // 生成新位置：基准坐标 + 位置差异噪声
+//             // 生成新位置：基准坐标 + 随机扰动
 //             if (processed_pkg.location.size() < 2) {
 //                 processed_pkg.location.resize(2, 0.0);
 //             }
 
-//             processed_pkg.location[0] = base_x + noise_x;
-//             processed_pkg.location[1] = base_y + noise_y;
+//             // 记录位置差
+//             std::vector<double> del_pos = {orig_pos[0] - base_x, orig_pos[1] - base_y};
             
-//             // 保存位置记录供后续使用
-//             base_class_records.push_back({orig_pos, processed_pkg.location});
+//             // 保存位置差
+//             del_class_config_1[processed_pkg.class_id] = {del_pos[0], del_pos[1]};
+
+//             // 更改processed_pkg的location
+//             std::random_device rd;
+//             std::mt19937 gen_(rd());
+//             std::uniform_real_distribution<double> dis_(-0.2, 0.2);
+//             processed_pkg.location[0] = base_x + dis_(gen_);
+//             processed_pkg.location[1] = base_y + dis_(gen_);
 //         }
 //         result.push_back(processed_pkg);
 //     }
-//     // Step 3: 处理非基准类别数据包
+
+//     // Step 2: 处理非基准类别数据包
 //     for (Package& pkg : result) {
 //         if (class_config.count(pkg.class_id)) continue; // 跳过基准类别
+
+//         auto [del_x, del_y] = del_class_config_1.at(class_1_);
         
 //         // 确保位置向量有效
 //         if (pkg.location.size() < 2) {
 //             pkg.location.resize(2, 0.0);
 //         }
-//         const std::vector<double>& current_pos = pkg.location;
-//         // 查找最近基准点的原始位置
-//         const BaseClassPosRecord* nearest_record = nullptr;
-//         double min_sq_distance = std::numeric_limits<double>::max();
-//         for (const auto& record : base_class_records) {
-//             if (record.original_pos.size() < 2) continue;
-//             // 计算欧氏距离平方（避免开方提升性能）
-//             double dx = current_pos[0] - record.original_pos[0];
-//             double dy = current_pos[1] - record.original_pos[1];
-//             double sq_dist = dx*dx + dy*dy;
-//             if (sq_dist < min_sq_distance) {
-//                 min_sq_distance = sq_dist;
-//                 nearest_record = &record;
-//             }
-//         }
-//         // 应用位置调整
-//         if (nearest_record && nearest_record->adjusted_pos.size() >= 2) {
-//             // 计算原始相对偏移
-//             double dx = current_pos[0] - nearest_record->original_pos[0];
-//             double dy = current_pos[1] - nearest_record->original_pos[1];
-            
-//             // 新位置 = 基准点调整后的位置 - 原始偏移量
-//             pkg.location[0] = nearest_record->adjusted_pos[0] + dx;
-//             pkg.location[1] = nearest_record->adjusted_pos[1] + dy;
-//         }
+        
+//         pkg.location[0] = pkg.location[0] - del_x;
+//         pkg.location[1] = pkg.location[1] - del_y;
+
 //     }
 //     return result;
 // }

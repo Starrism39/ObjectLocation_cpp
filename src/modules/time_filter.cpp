@@ -22,7 +22,7 @@ std::vector<Package> TimeFilter::process(std::vector<Package> &data)
         else
         {
             Package &exist_pkg = existing->second;
-            if (exist_pkg.time < pkg.time)
+            if (exist_pkg.time > pkg.time)
             {
                 Package new_pkg = pkg.copy();
                 new_pkg.dp = exist_pkg.dp;

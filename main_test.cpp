@@ -265,24 +265,9 @@ Module *createModule(YAML::Node config, const std::string &name, const YAML::Nod
             args["class_1"].as<int>(),
             args["x1"].as<double>(),
             args["y1"].as<double>(),
-            args["class_2"].as<int>(),
-            args["x2"].as<double>(),
-            args["y2"].as<double>(),
             args["max_queue_length"].IsDefined() ? args["max_queue_length"].as<int>() : 0);
     }
 
-    // else if (name == "RTKDifference")
-    // {
-    //     return new RTKDifference(
-    //         args["time_slice"].as<double>(),
-    //         1,
-    //         20.0,
-    //         30.0,
-    //         2,
-    //         -10.0,
-    //         10.0,
-    //         args["max_queue_length"].IsDefined() ? args["max_queue_length"].as<int>() : 0);
-    // }
 
     std::cerr << "Error: Unknown module type " << std::endl;
     return nullptr;
@@ -304,6 +289,7 @@ void setup_processing_pipeline(
         input_config["name"].as<std::string>(),
         input_queue,
         input_lock,
+        input_config["args"]["uav_id"].as<uint8_t>(),
         input_config["args"]["del_easting"].as<double>(),
         input_config["args"]["del_northing"].as<double>(),
         input_config["args"]["del_uav1_height"].as<double>(),

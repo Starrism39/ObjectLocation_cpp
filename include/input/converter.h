@@ -15,6 +15,7 @@ public:
     PackageConverter(const std::string &name,
                      std::shared_ptr<std::vector<std::shared_ptr<DataPackage>>> input_queue,
                      std::shared_ptr<std::mutex> input_lock,
+                     uint8_t uav_id,
                      double del_easting,
                      double del_northing,
                      double del_uav0_height,
@@ -66,6 +67,7 @@ protected:
     std::shared_ptr<TimePriorityQueue<Package>> outputQueue;
     std::shared_ptr<std::mutex> inputLock;
     std::shared_ptr<std::mutex> outputLock;
+    uint8_t uav_id_;
     double del_easting;
     double del_northing;
     double del_uav0_height;

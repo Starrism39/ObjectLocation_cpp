@@ -13,6 +13,7 @@ Output::Output(const std::string &name,
                                                         ip(ip)
 {
     std::cout << "\nBuilding " << name << std::endl;
+    y_ = 0.0;
     this->server = std::make_shared<UDPOperation>(ip.c_str(), port, interface.c_str());
     this->server->create_server();
 }
@@ -99,7 +100,7 @@ void Output::processObjectsInCircle(OutPackage& pkg, double center_x, double cen
 
         // 判断是否在圆内并更新
         if (dist_sq <= radius*radius) {
-            const uint8_t new_label = 3;
+            const uint8_t new_label = 4;
             obj.global_id = (obj.global_id & 0xFFFFFF00) | new_label; // 保留高24位
             obj.label = new_label;  // 同步更新结构体字段
             // std::cout << "Object " << obj.global_id << " is in the circle." << std::endl;
@@ -127,11 +128,26 @@ void Output::processObjectsInRectangle(OutPackage& pkg,
         if (x >= min_x && x <= max_x && 
             y >= min_y && y <= max_y) 
         {
-            const uint8_t new_label = 3;
+            const uint8_t new_label = 4;
             obj.global_id = (obj.global_id & 0xFFFFFF00) | new_label;
             obj.label = new_label;
             // std::cout << "Object " << obj.global_id << " is in the rectangle." << std::endl;
         }
+    }
+}
+
+void Output::adjustEnmies(OutPackage& pkg){
+    for (auto& obj : pkg.objs) {
+        if(static_cast<uint8_t>(obj.global_id & 0xFF) == 1){
+            y_ = obj.location[1];
+        } 
+    }
+    for (auto& obj : pkg.objs) {
+        if(static_cast<uint8_t>(obj.global_id & 0xFF) == 0 && obj.location[1] < y_){
+            const uint8_t new_label = 4;
+            obj.global_id = (obj.global_id & 0xFFFFFF00) | new_label;
+            obj.label = new_label;
+        } 
     }
 }
 
@@ -156,11 +172,12 @@ void Output::process()
         OutPackage package = inputQueue->pop();
         inputLock->unlock();
 
-        // 打印每个包的信息
-        printOutPackage(package);
-
         // processObjectsInCircle(package, 0.0, 0.0, 3000);
         // processObjectsInRectangle(package, -2000, 2000, -2000, 2000);
+        adjustEnmies(package);
+
+        // 打印每个包的信息
+        printOutPackage(package);
 
         output(package);
 

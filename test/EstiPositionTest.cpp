@@ -50,18 +50,18 @@ int main()
     Package test_pkg;
 
     // 填充相机参数 (示例值，需根据实际数据调整)
-    test_pkg.camera_pose = {-90.905741, -68.407495, -17.421474, 770189.29 - 770076.50315, 3635031.12 - 3634953.59778, 356.695541};    // [yaw, pitch, roll, x, y, z]
-    test_pkg.camera_K = {6509.18070, 6501.34349, 960, 540};               // [fx, fy, cx, cy]
+    test_pkg.camera_pose = {-141.08914, -44.14499, -5.21455, 48.43295, 86.94737, 655.15521};    // [yaw, pitch, roll, x, y, z]
+    test_pkg.camera_K = {4816.6703673120310, 4767.6306828021980, 976.34574378625325, 550.49482992540891};               // [fx, fy, cx, cy]
     test_pkg.camera_distortion = {0.0, 0.0, 0.0, 0.0, 0.0}; // [k1, k2, p1, p2, k3]
-    const int bbox_width = 2;  // 归一化宽度
-    const int bbox_height = 2; // 归一化高度
-    const int x = 1141 + 320;
-    const int y = 202;
+    // const int bbox_width = 2;  // 归一化宽度
+    // const int bbox_height = 2; // 归一化高度
+    const int x = 568;
+    const int y = 152;
     test_pkg.Bbox = {
-        x-1,   // 中心对齐x坐标
-        y-1,  // 中心对齐y坐标
-        bbox_width,
-        bbox_height
+        x,   // 中心对齐x坐标
+        y,  // 中心对齐y坐标
+        216,
+        112
     };
     PrintPackage(test_pkg);
 
@@ -72,7 +72,7 @@ int main()
         // 初始化估计器（单尺度地图模式）
         EstiPosition estimator(
             false,                                                        // is_multi_map
-            "/root/xjy/ObjectLocation_cpp/data/plane_map_test.npy", // 替换为实际网格路径
+            "/home/grifcc/xjy/new/ObjectLocation_cpp_test/data/plane_map_test.npy", // 替换为实际网格路径
             0.0,                                                         // default_height
             "szyx",                                                       // 欧拉角顺序
             true                                                          // enable=true

@@ -13,6 +13,7 @@
 #include "modules/esti_position.h"
 #include "modules/PkgArrange.h"
 #include "modules/spatial_filter.h"
+#include "modules/RTK_difference.h"
 
 #include "output/fusion.h"
 #include "output/kalman.h"
@@ -88,6 +89,16 @@ Module *createModule(YAML::Node config, const std::string &name, const YAML::Nod
             args["max_queue_length"].IsDefined() ? args["max_queue_length"].as<int>() : 0);
     }
 
+    else if (name == "RTKDifference")
+    {
+        return new RTKDifference(
+            args["time_slice"].as<double>(),
+            args["class_1"].as<int>(),
+            args["x1"].as<double>(),
+            args["y1"].as<double>(),
+            args["max_queue_length"].IsDefined() ? args["max_queue_length"].as<int>() : 0);
+    }
+
     else if (name == "SpatialFilter")
     {
         return new SpatialFilter(
@@ -128,6 +139,7 @@ void setup_processing_pipeline(
         convert_config["name"].as<std::string>(),
         input->getOutputQueue(),
         input->getOutputLock(),
+        convert_config["args"]["uav_id"].as<int>(),
         convert_config["args"]["del_easting"].as<double>(),
         convert_config["args"]["del_northing"].as<double>(),
         convert_config["args"]["del_uav1_height"].as<double>(),

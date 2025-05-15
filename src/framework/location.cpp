@@ -7,9 +7,9 @@ Location::Location(const std::string &name, size_t maxQueueLength)
 
 void Location::run()
 {
+
     while (isRunning)
     {
-        // std::cout << "running esti_position" << std::endl;
         // 获取输入锁
         inputLock->lock();
 
@@ -31,6 +31,7 @@ void Location::run()
         // std::cout << std::string(3, '\n');
         // std::cout << "==================== location ====================" << std::endl;
 
+
         // 等待输出队列有空间
         while (outputQueue->isFull())
         {
@@ -41,6 +42,13 @@ void Location::run()
         outputLock->lock();
         // // 打印每个包的信息
         // PrintPackage(package);
+
+        // if(package.class_id == 2){
+        //     auto line = "timestamp: " + std::to_string(package.time) +  " x: " +  std::to_string(package.location[0] ) +  " y: " + std::to_string(package.location[1] ) + " z: "  +std::to_string(package.location[2] ) + "\n";
+        //     LogMessage(line);
+        // }
+        
+
         if (!package.location.empty())
         {
             outputQueue->push(package);

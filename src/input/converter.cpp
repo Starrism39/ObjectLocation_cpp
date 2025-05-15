@@ -48,6 +48,7 @@ std::tuple<double, double, int, double> LLHtoUTM(double lon_deg, double lat_deg,
 PackageConverter::PackageConverter(const std::string &name,
                                    std::shared_ptr<std::vector<std::shared_ptr<DataPackage>>> input_queue,
                                    std::shared_ptr<std::mutex> input_lock,
+                                   uint8_t uav_id,
                                    double del_easting,
                                    double del_northing,
                                    double del_uav0_height,
@@ -55,6 +56,7 @@ PackageConverter::PackageConverter(const std::string &name,
                                    int max_queue_length) : name(name),
                                                            inputQueue(std::move(input_queue)),
                                                            inputLock(std::move(input_lock)),
+                                                           uav_id_(uav_id),
                                                            del_easting(del_easting),
                                                            del_northing(del_northing),
                                                            del_uav0_height(del_uav0_height),
@@ -96,7 +98,7 @@ std::vector<double> PackageConverter::GetCameraIntrinsics(std::string uav_id)
     case 1:
         return {4650.9914986723425, 4647.1903040210036, 1085.7636585526575, 607.97367054885467}; // fx, fy, cx, cy 待改
     case 2:
-        return {1000.0, 1000.0, 320.0, 240.0};
+        return {4816.6703673120310, 4767.6306828021980, 976.34574378625325, 550.49482992540891};
     default:
         throw std::runtime_error("未知的无人机类型");
     }
@@ -180,8 +182,8 @@ Package PackageConverter::ConvertSingleObject(const std::shared_ptr<DataPackage>
 
     pkg.camera_pose = {
         cm.member.yaw,
-        cm.member.pitch,
         cm.member.roll,
+        cm.member.pitch,
         easting - 0.04303 - del_easting,  // parameter
         northing + 0.0025 - del_northing,  // parameter
         height - 0.13636 - del_h};
@@ -248,6 +250,7 @@ void PackageConverter::process()
 {
     while (isRunning)
     {
+        
         std::shared_ptr<DataPackage> data_pkg = nullptr;
 
         // 获取数据包并立即释放锁
@@ -294,6 +297,8 @@ void PackageConverter::process()
             outputQueue->push(package);
         }
         outputLock->unlock();
+        
+
     }
 }
 

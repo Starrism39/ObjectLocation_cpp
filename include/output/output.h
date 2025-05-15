@@ -39,6 +39,7 @@ private:
     void processObjectsInCircle(OutPackage& pkg, double center_x, double center_y, double radius);
     void processObjectsInRectangle(OutPackage& pkg, double min_x, double max_x, double min_y, double max_y);
     void process();
+    void adjustEnmies(OutPackage& pkg);
 
 protected:
     std::string name;
@@ -48,4 +49,6 @@ protected:
     std::shared_ptr<UDPOperation> server;
     std::atomic<bool> isRunning;
     std::thread thread_;
+
+    double y_;
 };

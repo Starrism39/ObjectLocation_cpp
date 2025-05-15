@@ -38,7 +38,7 @@ std::vector<double> Package::getCenterPoint() const
     else if (bbox_type == "xywh")
     {
         center[0] = static_cast<double>(Bbox[0] + Bbox[2] / 2.0);
-        center[1] = static_cast<double>(Bbox[1] + Bbox[3] / 2.0);
+        center[1] = static_cast<double>(Bbox[1] + Bbox[3] / 1.0);
     }
     else
     {

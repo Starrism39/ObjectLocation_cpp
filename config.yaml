@@ -2,15 +2,13 @@
 global:
   map_path: &map_path "/home/grifcc/xjy/new/ObjectLocation_cpp_test/data/plane_map_test.npy" #可更换地图
   max_queue_length: &max_queue_length 99999
+  time_slice: &time_slice 30 # 时间线融合, 可以调整, 单位ms
 
-  time_slice: &time_slice 1 # 时间线融合, 可以调整, 单位ms
+  del_easting: &del_easting 430754 # 地图相对于UTM坐标系的x轴偏移
+  del_northing: &del_northing 3729813 # 地图相对于UTM坐标系的y轴偏移
+  del_uav1_height: &del_uav1_height -1.09 # 无人机1的IMU高度偏移
+  del_uav2_height: &del_uav2_height -0.01 # 无人机2的IMU高度偏移
 
-  del_easting: &del_easting 508129.51379 # 地图相对于UTM坐标系的x轴偏移
-  del_northing: &del_northing 12663298.75058 # 地图相对于UTM坐标系的y轴偏移
-  del_uav1_height: &del_uav1_height 0.0 # 无人机1的IMU高度偏移
-  del_uav2_height: &del_uav2_height 20.0 # 无人机2的IMU高度偏移
-
-  sigma_a: &sigma_a 0.1 # 无人机加速度噪声标准差
   output_ip: &output_ip "192.168.13.1"
   output_port: &output_port 8888
   output_interface: &output_interface "enp4s0f1"
@@ -30,6 +28,7 @@ input:
     idx: 2
     name: "DataConvert"
     args:
+      uav_id: 0
       del_easting: *del_easting
       del_northing: *del_northing
       del_uav1_height: *del_uav1_height
@@ -61,37 +60,32 @@ pipeline:
       max_queue_length: *max_queue_length
 
 
-  stage3:
-    idx: 3
-    parallel: 1
-    name: "PkgArrange"
-    args:
-      max_queue_length: *max_queue_length
-
+  # stage3:
+  #   idx: 3
+  #   parallel: 1
+  #   name: "PkgArrange"
+  #   args:
+  #     max_queue_length: *max_queue_length
 
   stage4:
     idx: 4
-    name: "SpatialFilter"
-    parallel: 1
-    args:
-      time_slice: *time_slice
-      distance_threshold: 10.0 #多机融合距离阈值
-      max_map: 100
-      max_queue_length: *max_queue_length
-
-
-  stage5:
-    idx: 5
     name: "RTKDifference"
     parallel: 1
     args:
       time_slice: *time_slice
       class_1: 1
-      x1: 20.0
-      y1: 30.0
-      class_2: 2
-      x2: -10.0
-      y2: 10.0
+      x1: 78.33
+      y1: -132.72
+      max_queue_length: *max_queue_length
+
+  stage5:
+    idx: 5
+    name: "SpatialFilter"
+    parallel: 1
+    args:
+      time_slice: *time_slice
+      distance_threshold: 20.0 #多机融合距离阈值
+      max_map: 100
       max_queue_length: *max_queue_length
 
 output:
@@ -107,8 +101,8 @@ output:
     idx: 2
     name: "Kalman"
     args:
-      time_slice: 1
-      sigma_a: *sigma_a
+      time_slice: 900
+      sigma_a: 0.1
       max_queue_length: *max_queue_length
 
   stage3:
@@ -118,3 +112,5 @@ output:
       ip: *output_ip
       port: *output_port
       interface: *output_interface
+
+#35.78197, 3.81175, -38.83270

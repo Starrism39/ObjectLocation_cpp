@@ -42,8 +42,5 @@ private:
     size_t vertices_per_triangle;
     size_t coords_per_vertex;
 
-    // 多尺度地图
-    // TODO
-
     bool loadMesh(const std::string &mesh_path);
 };
